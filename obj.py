@@ -5,8 +5,11 @@ class Obj(object):
             setattr(self, k, Obj(v) if isinstance(v, dict) else v)
 
     def __setattr__(self, key, value):
-        #setattr(self, key[0], value)
-        self.__dict__[key][0] = value
+        if key in self:
+            #setattr(self, key[0], value)
+            self.__dict__[key][0] = value
+        else:
+            self.__dict__[key] = value
 
     def __getattr__(self, item):
         #return getattr(self, item[0])
