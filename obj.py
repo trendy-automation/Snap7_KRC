@@ -19,6 +19,7 @@ class Obj(object):
     def signals(self):
         return self.__dict__.keys()
 
+
     # def __ne__(self, other):
     #     return not self.__eq__(other)
     #
