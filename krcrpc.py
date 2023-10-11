@@ -29,6 +29,8 @@ class KRCRPC(threading.Thread):
 
         self.inputs_queue = krc_rpc_config['inputs_queue']
         self.outputs_queue = krc_rpc_config['outputs_queue']
+        self.axis_act_queue = Queue()
+        self.axis_act_queue.put([0**8])
 
         # объект логинга
         self.logger = logging.getLogger("_krcrpc_.client")
@@ -46,7 +48,7 @@ class KRCRPC(threading.Thread):
         cur_thread = threading.current_thread()
         # Основной цикл
         do_run = getattr(cur_thread, "do_run", True)
-        if do_run == False:
+        if not do_run:
             self.socketclient.close()
 
         # Подключение к KRC RPC ...
@@ -126,7 +128,7 @@ class KRCRPC(threading.Thread):
             except Exception as error:
                 self.logger.error(f"Не удалось обработать цикл класса KRCRPC\n"
                                   f"Ошибка {str(error)} {traceback.format_exc()}")
-            time.sleep(1)
+            time.sleep(self.refresh_time)
 
     # Communication with KRC RPC (OfficeLite)
     def process_krc_rpc(self):
@@ -135,6 +137,23 @@ class KRCRPC(threading.Thread):
             # ----------------------------------------------------------
             # VARIABLES
             # ----------------------------------------------------------
+            
+            # Чтение kuka_inputs
+            kuka_inputs = self.inputs_queue.queue[0]['kuka_inputs']
+            # Чтение outputs
+            kuka_outputs = self.outputs_queue.queue[0]['kuka_outputs']
+            rdk_outputs = self.outputs_queue.queue[0]['rdk_outputs']
+            #print(f'{kuka_outputs.signals()=}')
+
+            # Изменение kuka_outputs
+            if "someUInt" in kuka_outputs.signals():
+                #print(f'{kuka_outputs.someUInt=}')
+                kuka_outputs.someUInt = 223
+
+
+            # Запись kuka_outputs
+            self.outputs_queue.queue[0] = dict(kuka_outputs=kuka_outputs, rdk_outputs=rdk_outputs)
+            
             '''
             # WRITE LaserTrigg var to TRUE
             message = ("{'method':'Var_SetVar','params':['LaserTrigg','false'],'id':2}\n").encode()
@@ -157,7 +176,7 @@ class KRCRPC(threading.Thread):
             # print("<<<\t", response_bytes)
             # print("--- response time: %s seconds ---" % (time.time() - start_time))
 
-            ### RESPONSE PARSING ###
+            # RESPONSE PARSING
             # convert bytes to str
             response_str = response_bytes.decode('UTF-8')
 
@@ -169,8 +188,9 @@ class KRCRPC(threading.Thread):
 
             # 4 cut and convert string to float
             rob_axis_act = [float(axis) for axis in raw_axis_act[1:9]]
-            print(f'{rob_axis_act=}')
-            print(' ')
+            self.axis_act_queue.queue[0] = rob_axis_act
+            #print(f'{rob_axis_act=}')
+            #print(' ')
 
         except Exception as error:
             self.logger.error(f"Не удалось получить данные из KRC RPC\n"

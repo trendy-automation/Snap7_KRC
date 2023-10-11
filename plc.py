@@ -7,6 +7,7 @@ import threading
 import numpy as np  # pip install numpy
 from queue import Queue
 from obj import Obj
+import copy
 
 from robodk.robodialogs import *
 from robodk.robolink import *  # API to communicate with RoboDK
@@ -30,9 +31,6 @@ class PLC(threading.Thread):
 
         self.inputs_queue = Queue()
         self.outputs_queue = Queue()
-
-        self.inputs_queue.put(dict(kuka_inputs={}, rdk_inputs={}))
-        self.outputs_queue.put(dict(kuka_outputs={}, rdk_outputs={}))
 
         # KUKA IN SIGNALS
         self.kuka_db_in = Obj({
@@ -81,6 +79,9 @@ class PLC(threading.Thread):
             "RDK_IO_OUT9": [False, "Bool", 265, 0],
             "RDK_IO_OUT10": [False, "Bool", 265, 1]
         })
+
+        self.inputs_queue.put(dict(kuka_inputs=copy.deepcopy(self.kuka_db_in), rdk_inputs=copy.deepcopy(self.rdk_db_in)))
+        self.outputs_queue.put(dict(kuka_outputs=copy.deepcopy(self.kuka_db_out), rdk_outputs=copy.deepcopy(self.rdk_db_out)))
 
         # объект логинга
         self.logger = logging.getLogger("_plc_.client")
@@ -160,7 +161,8 @@ class PLC(threading.Thread):
 
     def set_char(self, db_number, offsetbyte, tag_value) -> int:
         tag_data = bytearray(1)
-        tag_data = bytes(tag_value[0], "ascii")
+        if tag_value:
+            tag_data = bytes(tag_value[0], "ascii")
         return self.snap7client.db_write(db_number, offsetbyte, tag_data)
 
     def set_string(self, db_number, offsetbyte, tag_value, value_type) -> int:
@@ -188,6 +190,7 @@ class PLC(threading.Thread):
 
     def set_signals(self, db: Obj):
         for output_signal in db:
+            print(f'{output_signal=}')
             self.set_db_value(output_signal)
         #for output_signal in db.signals():
         #    self.set_db_value(db.get(output_signal))
@@ -213,6 +216,7 @@ class PLC(threading.Thread):
                             self.connection_ok = False
                             self.logger.info(f"Подключение к контроллеру {self.plc_ip}...")
                             self.snap7client.connect(self.plc_ip, 0, 1)
+
                         except Exception as error:
                             self.logger.error(f"Не удалось подключиться к контроллеру: {self.plc_ip}\n"
                                               f"Ошибка {str(error)} {traceback.format_exc()}")
@@ -224,7 +228,8 @@ class PLC(threading.Thread):
                             self.unreachable_time = 0
                             self.logger.info(f"Соединение открыто {self.plc_ip}")
                             snap7.client.logger.disabled = False
-
+                            self.get_signals(self.kuka_db_out)
+                            self.get_signals(self.rdk_db_out)
                         self.process_io()
 
             except Exception as error:
@@ -237,18 +242,22 @@ class PLC(threading.Thread):
         try:
             self.get_signals(self.kuka_db_in)
             self.get_signals(self.rdk_db_in)
-
-            self.inputs_queue.queue[0] = dict(kuka_inputs=self.kuka_db_in, rdk_inputs=self.rdk_db_in)
+            self.inputs_queue.queue[0] = dict(kuka_inputs=copy.deepcopy(self.kuka_db_in), rdk_inputs=copy.deepcopy(self.rdk_db_in))
 
             outputs = self.outputs_queue.queue[0]
             kuka_outputs = outputs['kuka_outputs']
             rdk_outputs = outputs['rdk_outputs']
 
+            # Сравнение предыдущих значений выходов с текущими
             if self.kuka_db_out != kuka_outputs:
-                self.set_signals(self.kuka_db_out)
+                self.set_signals(kuka_outputs)
+                self.kuka_db_out = kuka_outputs
+            print(f'{rdk_outputs.RDK_IO_OUT1=}')
+            #print(f'{self.rdk_db_out.RDK_IO_OUT1=}')
+            print(f'{(self.rdk_db_out != rdk_outputs)=}')
             if self.rdk_db_out != rdk_outputs:
-                self.set_signals(self.rdk_outputs)
-
+                self.set_signals(rdk_outputs)
+                self.rdk_db_out = rdk_outputs
         except Exception as error:
             self.logger.error(f"Не удалось обработать данные из DB{self.db_num}\n"
                               f"Ошибка {str(error)} {traceback.format_exc()}")
