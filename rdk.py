@@ -14,12 +14,13 @@ class RDK(threading.Thread):
         threading.Thread.__init__(self, args=(), name=rdk_config['robotname'] , kwargs=None)
 
         self.robotname = rdk_config['robotname']
-        self.cnt = rdk_config['cnt']
+        self.cnt = rdk_config['CNT']
         self.speed = rdk_config['speed']
 
         self.inputs_queue = rdk_config['inputs_queue']
         self.outputs_queue = rdk_config['outputs_queue']
-
+        self.axis_act_queue = rdk_config['axis_act_queue']
+        self.refresh_time = rdk_config['refresh_time']
     def run(self):
 
         # Any interaction with RoboDK must be done through RDK:
@@ -39,17 +40,6 @@ class RDK(threading.Thread):
         robot.setRounding(self.cnt)  # Set the rounding parameter (Also known as: CNT, APO/C_DIS, ZoneData, Blending radius, cornering, ...)
         robot.setSpeed(self.speed)  # Set linear speed in mm/s
 
-        # Чтение rdk_inputs
-        rdk_inputs = self.inputs_queue.queue[0]['rdk_inputs']
-        # Чтение outputs
-        kuka_outputs = self.outputs_queue.queue[0]['kuka_outputs']
-        rdk_outputs = self.outputs_queue.queue[0]['rdk_outputs']
-        # Изменение
-
-        rdk_outputs.RDK_IO_OUT1 = True
-
-        # Запись rdk_outputs
-        self.outputs_queue.queue[0] = dict(kuka_outputs=kuka_outputs, rdk_inputs=rdk_outputs)
 
         '''
         print(self.robotname)
@@ -59,6 +49,21 @@ class RDK(threading.Thread):
         '''
         
         # Communication with controller (OfficeLite)
-        #while True:
-            #robot.setJoints(rob_axis_act) #rob_axis_act стримит krcrpc.py
-            
+        while True:
+            robot.setJoints(self.axis_act_queue.queue[0]) #rob_axis_act стримит krcrpc.py
+            # Чтение rdk_inputs
+            rdk_inputs = self.inputs_queue.queue[0]['rdk_inputs']
+            # Чтение outputs
+            kuka_outputs = self.outputs_queue.queue[0]['kuka_outputs']
+            rdk_outputs = self.outputs_queue.queue[0]['rdk_outputs']
+            #print(f'{rdk_outputs.signals()=}')
+
+            # Изменение rdk_outputs
+            if "RDK_IO_OUT1" in rdk_outputs.signals():
+                #print(f'{rdk_outputs.RDK_IO_OUT1=}')
+                rdk_outputs.RDK_IO_OUT1 = True
+
+
+            # Запись rdk_outputs
+            self.outputs_queue.queue[0] = dict(kuka_outputs=kuka_outputs, rdk_outputs=rdk_outputs)
+            time.sleep(self.refresh_time)

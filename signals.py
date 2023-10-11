@@ -13,7 +13,7 @@ class Signals(object):
         return self.__dict__[key]
 
 
-class Signal():
+class Signal:
     def __init__(self, value, db_number, offsetbyte, offsetbit):
         self.value = value
         self.db_number = db_number

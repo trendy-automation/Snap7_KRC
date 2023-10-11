@@ -1,26 +1,31 @@
 class Obj(object):
     def __init__(self, d):
         for k, v in d.items():
-            #setattr(self, k, Signal(*v) if isinstance(v, dict) else v)
+            # setattr(self, k, Signal(*v) if isinstance(v, dict) else v)
             setattr(self, k, Obj(v) if isinstance(v, dict) else v)
+
 
     def __setattr__(self, key, value):
         if key in self.__dict__ and not isinstance(value, list):
-            #setattr(self, key[0], value)
+            # setattr(self, key[0], value)
+            #print(f'{key=},{value=},{self.__dict__[key]=}')
             self.__dict__[key][0] = value
         else:
             self.__dict__[key] = value
 
     def __getattr__(self, item):
-        #return getattr(self, item[0])
-        return self.__dict__[item][0]
+        # return getattr(self, item[0])
+        if isinstance(item, dict):
+            return self.__dict__[item][0]
+        else:
+            return self.__dict__.__getattr__(item)
 
     def __iter__(self):
         return iter(self.__dict__.values())
 
     def get(self, item):
         return getattr(self, item)
-        #return self.__dict__[item]
+        # return self.__dict__[item]
 
     def signals(self):
         return self.__dict__.keys()
@@ -38,7 +43,7 @@ class Obj(object):
     #             result = all(i == j for i, j in zip(self.__dict__.iteritems(), other.__dict__.iteritems()))
     #     return result
 
-        #def __set__(self, instance, value):
+        # def __set__(self, instance, value):
     #    if isinstance(instance, list) and isinstance(value, list):
     #        instance = value
     #    elif isinstance(instance, dict) and isinstance(value, dict):
