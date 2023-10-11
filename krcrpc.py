@@ -8,6 +8,7 @@ import re
 from queue import Queue
 from obj import Obj
 
+
 class KRCRPC(threading.Thread):
     def __init__(self, krc_rpc_config):
         print("krcrpc.py")
@@ -45,15 +46,14 @@ class KRCRPC(threading.Thread):
         cur_thread = threading.current_thread()
         # Основной цикл
         do_run = getattr(cur_thread, "do_run", True)
-        if do_run==False:
+        if do_run == False:
             self.socketclient.close()
-
 
         # Подключение к KRC RPC ...
         try:
             self.logger.info(f"Подключение к KRC RPC {self.krc_hostname}...")
             self.socketclient.connect((self.krc_hostname, self.krc_port))
-    
+
             # Authentication
             message = ("{'method':'auth','params':['" + self.krc_authkey + "'],'id':1}\n").encode()
             print(">>>\t", message)
@@ -69,16 +69,14 @@ class KRCRPC(threading.Thread):
 
         except Exception as error:
             self.logger.error(f"Не удалось подключиться к KRC RPC: {self.krc_hostname}\n"
-                                f"Ошибка {str(error)} {traceback.format_exc()}")
-            #??
-            #socket.client.logger.disabled = True
+                              f"Ошибка {str(error)} {traceback.format_exc()}")
+            # ??
+            # socket.client.logger.disabled = True
             self.unreachable_time = time.time()
-
 
         while do_run:
             try:
                 if self.unreachable_time == 0 or (time.time() - self.unreachable_time) > self.reconnect_timeout:
-                    
                     # Check if socket closed
                     # self.socketclient.close()
                     # if self.socketclient.fileno() == -1:
@@ -132,11 +130,11 @@ class KRCRPC(threading.Thread):
 
     # Communication with KRC RPC (OfficeLite)
     def process_krc_rpc(self):
-    
+
         try:
-            #----------------------------------------------------------
+            # ----------------------------------------------------------
             # VARIABLES
-            #----------------------------------------------------------
+            # ----------------------------------------------------------
             '''
             # WRITE LaserTrigg var to TRUE
             message = ("{'method':'Var_SetVar','params':['LaserTrigg','false'],'id':2}\n").encode()
@@ -145,19 +143,19 @@ class KRCRPC(threading.Thread):
             response_bytes = self.socketclient.recv(1024)
             print("<<<\t", response_bytes)
             '''
-        
-            #----------------------------------------------------------
+
+            # ----------------------------------------------------------
             # MOTION
-            #----------------------------------------------------------
-            
+            # ----------------------------------------------------------
+
             # response from socket client (bytes)
-            #start_time = time.time()
+            # start_time = time.time()
             message = "{'method':'Var_ShowVar','params':['$AXIS_ACT'],'id':3}\n".encode()
-            #print(">>>\t", message)
+            # print(">>>\t", message)
             self.socketclient.send(message)
             response_bytes = self.socketclient.recv(1024)
-            #print("<<<\t", response_bytes)
-            #print("--- response time: %s seconds ---" % (time.time() - start_time))
+            # print("<<<\t", response_bytes)
+            # print("--- response time: %s seconds ---" % (time.time() - start_time))
 
             ### RESPONSE PARSING ###
             # convert bytes to str
@@ -169,7 +167,7 @@ class KRCRPC(threading.Thread):
             # split only axis value by <:>
             raw_axis_act = re.split(': A1 |, A\d |, E\d ', response_json['result'])
 
-            #4 cut and convert string to float
+            # 4 cut and convert string to float
             rob_axis_act = [float(axis) for axis in raw_axis_act[1:9]]
             print(f'{rob_axis_act=}')
             print(' ')
@@ -178,4 +176,3 @@ class KRCRPC(threading.Thread):
             self.logger.error(f"Не удалось получить данные из KRC RPC\n"
                               f"Ошибка {str(error)} {traceback.format_exc()}")
             self.socketclient.close()
-        

@@ -1,15 +1,16 @@
 import logging
 import queue
 import time
-import snap7 # pip install python-snap7
+import snap7  # pip install python-snap7
 import traceback
 import threading
-import numpy as np # pip install numpy
+import numpy as np  # pip install numpy
 from queue import Queue
 from obj import Obj
 
 from robodk.robodialogs import *
 from robodk.robolink import *  # API to communicate with RoboDK
+
 
 class PLC(threading.Thread):
     def __init__(self, plc_config):
@@ -68,7 +69,7 @@ class PLC(threading.Thread):
         })
 
         # RDK OUT SIGNALS
-        self.rdk_db_in = Obj({
+        self.rdk_db_out = Obj({
             "RDK_IO_OUT1": [False, "Bool", 264, 0],
             "RDK_IO_OUT2": [False, "Bool", 264, 1],
             "RDK_IO_OUT3": [False, "Bool", 264, 2],
