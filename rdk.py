@@ -5,6 +5,7 @@ from robodk.robolink import *  # API to communicate with RoboDK
 from queue import Queue
 from obj import Obj
 
+
 class RDK(threading.Thread):
     def __init__(self, rdk_config):
         print("rdk.py")
@@ -43,7 +44,9 @@ class RDK(threading.Thread):
         # Чтение outputs
         kuka_outputs = self.outputs_queue.queue[0]['kuka_outputs']
         rdk_outputs = self.outputs_queue.queue[0]['rdk_outputs']
-        # Изменение rdk_outputs
+        # Изменение
+
+        rdk_outputs.RDK_IO_OUT1 = True
 
         # Запись rdk_outputs
         self.outputs_queue.queue[0] = dict(kuka_outputs=kuka_outputs, rdk_inputs=rdk_outputs)
