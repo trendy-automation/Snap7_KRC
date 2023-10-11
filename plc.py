@@ -16,10 +16,10 @@ class PLC(threading.Thread):
         print("plc.py")
         
         # Наследование потока
-        threading.Thread.__init__(self, args=(), name=plc_config['plc_ip'], kwargs=None)
+        threading.Thread.__init__(self, args=(), name=plc_config['ip'], kwargs=None)
 
         # IP аддрес контроллера
-        self.plc_ip = plc_config['plc_ip']
+        self.plc_ip = plc_config['ip']
         # Номер DB блока с сигналами
         self.db_num = plc_config['db_num']
         # Время переподключения

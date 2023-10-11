@@ -5,7 +5,7 @@ class Obj(object):
             setattr(self, k, Obj(v) if isinstance(v, dict) else v)
 
     def __setattr__(self, key, value):
-        if key in self:
+        if key in self.__dict__ and not isinstance(value, list):
             #setattr(self, key[0], value)
             self.__dict__[key][0] = value
         else:
