@@ -16,7 +16,7 @@ class Obj(object):
         return self.__dict__[item][0]
 
     def __iter__(self):
-        return iter(self.__dict__)
+        return iter(self.__dict__.values())
 
     def get(self, item):
         return getattr(self, item)

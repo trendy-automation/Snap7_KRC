@@ -82,7 +82,6 @@ class PLC(threading.Thread):
             "RDK_IO_OUT10": [False, "Bool", 265, 1]
         })
 
-
         # объект логинга
         self.logger = logging.getLogger("_plc_.client")
         # logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
@@ -120,11 +119,11 @@ class PLC(threading.Thread):
         return self.snap7client.db_read(db_number, offsetbyte, 1).decode()
 
     def get_string(self, db_number, offsetbyte, value_type) -> int:
-        len_arr = 254 if len(value_type)==6 else value_type[7:-1]
+        len_arr = 254 if value_type == 'String' else value_type[7:-1]
         byte_array_read = self.snap7client.db_read(db_number, offsetbyte, len_arr)
         return snap7.util.get_string(byte_array_read, 0)
 
-    def get_db_item(self, tag_list: list) -> list:
+    def get_db_value(self, tag_list: list) -> list:
         value, value_type, offsetbyte, offsetbit = tag_list
         if value_type == 'Bool':
             return [self.get_bool(self.db_num, offsetbyte, offsetbit), value_type, offsetbyte, offsetbit]
@@ -136,20 +135,6 @@ class PLC(threading.Thread):
             return [self.get_char(self.db_num, offsetbyte), value_type, offsetbyte, offsetbit]
         if value_type.startswith('String'):
             return [self.get_string(self.db_num, offsetbyte, value_type), value_type, offsetbyte, offsetbit]
-        return None
-
-    def get_db_value(self, tag_list: list) :
-        value, value_type, offsetbyte, offsetbit = tag_list
-        if value_type == 'Bool':
-            return self.get_bool(self.db_num, offsetbyte, offsetbit)
-        if value_type == "USInt":
-            return self.get_usint(self.db_num, offsetbyte)
-        if "Int" in value_type and value_type in self.massa:
-            return self.get_int(self.db_num, offsetbyte, value_type)
-        if value_type == 'Char':
-            return self.get_char(self.db_num, offsetbyte)
-        if value_type.startswith('String'):
-            return self.get_string(self.db_num, offsetbyte, value_type)
         return None
 
     def set_bool(self, db_number, offsetbyte, offsetbit, tag_value) -> int:
@@ -179,7 +164,7 @@ class PLC(threading.Thread):
         return self.snap7client.db_write(db_number, offsetbyte, tag_data)
 
     def set_string(self, db_number, offsetbyte, tag_value, value_type) -> int:
-        len_arr = 254 if len(value_type) == len('String') else value_type[7:-1]
+        len_arr = 254 if value_type == 'String' else value_type[7:-1]
         tag_value = f"%.{len_arr}s" % tag_value
         tag_data = bytearray(len_arr + 2)
         snap7.util.set_string(tag_data, 0, tag_value, len_arr)
@@ -187,7 +172,7 @@ class PLC(threading.Thread):
         tag_data[1] = np.uint8(len(tag_value))      
         return self.snap7client.db_write(db_number, offsetbyte, tag_data)
 
-    def set_db_value(self, tag_list: list)  -> int:
+    def set_db_value(self, tag_list: list) -> int:
         tag_value, value_type, offsetbyte, offsetbit = tag_list
         if value_type == 'Bool':
             return self.set_bool(self.db_num, offsetbyte, offsetbit, tag_value)
@@ -199,17 +184,17 @@ class PLC(threading.Thread):
             return self.set_char(self.db_num, offsetbyte, tag_value)
         if value_type.startswith('String'):
             return self.set_string(self.db_num, offsetbyte, tag_value, value_type)
-        return False
+        return 0
 
     def set_signals(self, db: Obj):
         for output_signal in db:
-            print(f'output_signal = {str(output_signal)}')
             self.set_db_value(output_signal)
         #for output_signal in db.signals():
         #    self.set_db_value(db.get(output_signal))
 
     def get_signals(self, db: Obj):
         for input_signal in db:
+            #print(f'{input_signal=}')
             input_signal = self.get_db_value(input_signal)
 
     def run(self):
