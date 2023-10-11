@@ -30,6 +30,9 @@ class PLC(threading.Thread):
         self.inputs_queue = Queue()
         self.outputs_queue = Queue()
 
+        self.inputs_queue.put(dict(kuka_inputs={}, rdk_inputs={}))
+        self.outputs_queue.put(dict(kuka_outputs={}, rdk_outputs={}))
+
         # KUKA IN SIGNALS
         self.kuka_db_in = Obj({
             # Correct offsets
@@ -198,8 +201,11 @@ class PLC(threading.Thread):
         return False
 
     def set_signals(self, db: Obj):
-        for output_signal in db.signals():
-            self.set_db_value(db.get(output_signal))
+        for output_signal in db:
+            print(f'output_signal = {str(output_signal)}')
+            self.set_db_value(output_signal)
+        #for output_signal in db.signals():
+        #    self.set_db_value(db.get(output_signal))
 
     def get_signals(self, db: Obj):
         for input_signal in db:
@@ -246,9 +252,9 @@ class PLC(threading.Thread):
             self.get_signals(self.kuka_db_in)
             self.get_signals(self.rdk_db_in)
 
-            self.inputs_queue.put(dict(kuka_inputs=self.kuka_db_in, rdk_inputs=self.rdk_db_in))
+            self.inputs_queue.queue[0] = dict(kuka_inputs=self.kuka_db_in, rdk_inputs=self.rdk_db_in)
 
-            outputs = self.inputs_queue.get()
+            outputs = self.outputs_queue.queue[0]
             kuka_outputs = outputs['kuka_outputs']
             rdk_outputs = outputs['rdk_outputs']
 

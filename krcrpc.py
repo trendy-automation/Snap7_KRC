@@ -26,6 +26,9 @@ class KRCRPC(threading.Thread):
         # Время обновления
         self.refresh_time = krc_rpc_config['refresh_time']
 
+        self.inputs_queue = krc_rpc_config['inputs_queue']
+        self.outputs_queue = krc_rpc_config['outputs_queue']
+
         # объект логинга
         self.logger = logging.getLogger("_krcrpc_.client")
         # logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
@@ -77,8 +80,9 @@ class KRCRPC(threading.Thread):
                 if self.unreachable_time == 0 or (time.time() - self.unreachable_time) > self.reconnect_timeout:
                     
                     # Check if socket closed
-                    #self.socketclient.close()
-                    # print(self.socketclient._closed)
+                    # self.socketclient.close()
+                    # if self.socketclient.fileno() == -1:
+                    #   print(self.socketclient._closed)
 
                     '''
                     if not self.socketclient._closed:

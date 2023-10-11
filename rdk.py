@@ -16,6 +16,9 @@ class RDK(threading.Thread):
         self.cnt = rdk_config['cnt']
         self.speed = rdk_config['speed']
 
+        self.inputs_queue = rdk_config['inputs_queue']
+        self.outputs_queue = rdk_config['outputs_queue']
+
     def run(self):
 
         # Any interaction with RoboDK must be done through RDK:
@@ -34,6 +37,16 @@ class RDK(threading.Thread):
         robot.setPoseTool(robot.PoseTool())
         robot.setRounding(self.cnt)  # Set the rounding parameter (Also known as: CNT, APO/C_DIS, ZoneData, Blending radius, cornering, ...)
         robot.setSpeed(self.speed)  # Set linear speed in mm/s
+
+        # Чтение rdk_inputs
+        rdk_inputs = self.inputs_queue.queue[0]['rdk_inputs']
+        # Чтение outputs
+        kuka_outputs = self.outputs_queue.queue[0]['kuka_outputs']
+        rdk_outputs = self.outputs_queue.queue[0]['rdk_outputs']
+        # Изменение rdk_outputs
+
+        # Запись rdk_outputs
+        self.outputs_queue.queue[0] = dict(kuka_outputs=kuka_outputs, rdk_inputs=rdk_outputs)
 
         '''
         print(self.robotname)

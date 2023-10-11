@@ -17,14 +17,16 @@ if __name__ == '__main__':
 
     # KRC RPC thread
     krc_rpc_config = config['krc_rpc']
-
+    krc_rpc_config['inputs_queue'] = my_plc.inputs_queue
+    krc_rpc_config['outputs_queue'] = my_plc.outputs_queue
     krc_rpc = KRCRPC(krc_rpc_config)
     krc_rpc.start()
 
     # RoboDK thread
-    robotname = config['robodk']['robotname']
-    cnt = config['robodk']['CNT']
-    speed = config['robodk']['speed']
+    rdk_config = config['robodk']['robotname']
+    rdk_config['inputs_queue'] = my_plc.inputs_queue
+    rdk_config['outputs_queue'] = my_plc.outputs_queue
 
-    rdk = RDK(robotname, cnt, speed)
+
+    rdk = RDK(rdk_config)
     rdk.start()
