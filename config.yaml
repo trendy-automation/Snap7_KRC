@@ -12,7 +12,7 @@ krc_rpc:
   hostname: 'PCRC-2RL7HHTTRE' # OfficeLite PC's hostname
   port: 3333 # must be same as in appsettings.json (listen port KRC-RPC)
   authkey: 'TOP_SECRET_KEY' # must be same as in appsettings.json (auth key KRC-RPC)
-  reconnect_timeout: 60
+  reconnect_timeout: 10
   refresh_time: 1.5
 robodk:
   robotname: 'KUKA KR 50 R2100' # Must be same as the robot's name in RoboDK station

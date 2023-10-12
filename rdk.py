@@ -1,8 +1,8 @@
 import threading
 from robodk.robolink import *  # API to communicate with RoboDK
-from robodk.robodialogs import *
-from queue import Queue
-from obj import Obj
+#from queue import Queue
+#from obj import Obj
+import logging
 
 
 class RDK(threading.Thread):
@@ -21,6 +21,9 @@ class RDK(threading.Thread):
         self.outputs_queue = rdk_config['outputs_queue']
         self.axis_act_queue = rdk_config['axis_act_queue']
 
+        # объект логинга
+        self.logger = logging.getLogger("_rdk_   ")
+
     def run(self):
 
         # Any interaction with RoboDK must be done through RDK:
@@ -38,12 +41,15 @@ class RDK(threading.Thread):
         robot.setRounding(self.cnt)  # Set the rounding parameter (Also known as: CNT, APO/C_DIS, ZoneData, Blending radius, cornering, ...)
         robot.setSpeed(self.speed)  # Set linear speed in mm/s
 
+        self.logger.info(f"CNT {self.cnt}")
+        self.logger.info(f"Speed {self.speed}")
+
         # Communication with controller (OfficeLite)
         while True:
             # rob_axis_act записывается в очередь в krcrpc.py
             robot.setJoints(self.axis_act_queue.queue[0])
 
-            # Чтение выходов OL и RoboDK из очереди
+            # Чтение входов OL и RoboDK из очереди
             kuka_inputs = self.inputs_queue.queue[0]['kuka_inputs']
 
             # Write values to RDK
@@ -51,18 +57,13 @@ class RDK(threading.Thread):
             for output_signal_name in rdk_outputs.signals():
                 # print('rdk.py: ' + f'{output_signal_name=} {rdk_outputs.get(output_signal_name)=}')
                 RDK.setParam(output_signal_name, int(rdk_outputs.get(output_signal_name)))
+                # RDK.setParam('IO_1', 'True')
 
             # Read values from RDK
             rdk_inputs = self.inputs_queue.queue[0]['rdk_inputs']
             for input_signal_name in rdk_inputs.signals():
                 # print('rdk.py: ' + f'{rdk_inputs.get(input_signal_name)=}')
                 rdk_inputs.set(input_signal_name, bool(RDK.getParam(input_signal_name)))
-
-            # test write
-            #print('')
-            # RDK.setParam('IO_1', 'True')
-            #RDK.setParam('IO_1', 1)
-            #print('   rdk.py: ' + 'IO_1 <-- ' + str(RDK.getParam('IO_1')))
 
             # Запись rdk_outputs
             self.inputs_queue.queue[0] = dict(kuka_inputs=kuka_inputs, rdk_inputs=rdk_inputs)
