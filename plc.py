@@ -7,7 +7,7 @@ from queue import Queue
 from obj import Obj
 import time
 import copy
-
+from data_io import Data_IO
 
 class PLC(threading.Thread):
     def __init__(self, plc_config):

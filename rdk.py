@@ -50,7 +50,7 @@ class RDK(threading.Thread):
             rdk_outputs = self.outputs_queue.queue[0]['rdk_outputs']
             for output_signal_name in rdk_outputs.signals():
                 # print('rdk.py: ' + f'{output_signal_name=} {rdk_outputs.get(output_signal_name)=}')
-                RDK.setParam(output_signal_name, rdk_outputs.get(output_signal_name))
+                RDK.setParam(output_signal_name, int(rdk_outputs.get(output_signal_name)))
 
             # Read values from RDK
             rdk_inputs = self.inputs_queue.queue[0]['rdk_inputs']
@@ -61,8 +61,8 @@ class RDK(threading.Thread):
             # test write
             #print('')
             # RDK.setParam('IO_1', 'True')
-            RDK.setParam('IO_1', True)
-            print('   rdk.py: ' + 'IO_1 <-- ' + str(RDK.getParam('IO_1')))
+            #RDK.setParam('IO_1', 1)
+            #print('   rdk.py: ' + 'IO_1 <-- ' + str(RDK.getParam('IO_1')))
 
             # Запись rdk_outputs
             self.inputs_queue.queue[0] = dict(kuka_inputs=kuka_inputs, rdk_inputs=rdk_inputs)

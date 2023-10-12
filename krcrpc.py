@@ -147,11 +147,11 @@ class KRCRPC(threading.Thread):
 
             # Запись kuka_outputs
             if "someUInt" in kuka_inputs.signals():
-                print('krcrpc.py: ' + f'{kuka_inputs.someUInt=}')
+                #print('krcrpc.py: ' + f'{kuka_inputs.someUInt=}')
                 kuka_inputs.someUInt = 223
 
             if "someBool" in kuka_inputs.signals():
-                print('krcrpc.py: ' + f'{kuka_inputs.someBool=}')
+                #print('krcrpc.py: ' + f'{kuka_inputs.someBool=}')
                 kuka_inputs.someBool = True
 
             self.inputs_queue.queue[0] = dict(kuka_inputs=kuka_inputs, rdk_inputs=rdk_inputs)
