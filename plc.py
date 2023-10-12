@@ -42,11 +42,11 @@ class PLC(threading.Thread):
 
         # KUKA OUT SIGNALS
         self.kuka_db_out = Obj({
-            "someString": ["", "String", 0, 0],
-            "someChar": ["", "Char", 256, 0],
-            "someUInt": [0, "UInt", 258, 0],
-            "someUSInt": [0, "USInt", 260, 0],
-            "someBool": [False, "Bool", 261, 0],
+            "someString": ["", "String", 266, 0],
+            "someChar": ["", "Char", 522, 0],
+            "someUInt": [0, "UInt", 524, 0],
+            "someUSInt": [0, "USInt", 526, 0],
+            "someBool": [False, "Bool", 527, 0],
         })
 
         # RDK OUT SIGNALS

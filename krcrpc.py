@@ -100,33 +100,36 @@ class KRCRPC(threading.Thread):
             # ----------------------------------------------------------
             # VARIABLES
             # ----------------------------------------------------------
-            
-            # Чтение kuka_outputs
-            kuka_outputs = self.outputs_queue.queue[0]['kuka_outputs']
 
-            # Чтение inputs
+            kuka_outputs = self.outputs_queue.queue[0]['kuka_outputs']
             kuka_inputs = self.inputs_queue.queue[0]['kuka_inputs']
             rdk_inputs = self.inputs_queue.queue[0]['rdk_inputs']
 
-            # Запись kuka_outputs
-            if "someUInt" in kuka_inputs.signals():
-                #print('krcrpc.py: ' + f'{kuka_inputs.someUInt=}')
-                kuka_inputs.someUInt = 223
+            # -------
+            # BOOL
+            # -------
 
+            # Write BOOL OfficeLite --> DB [261] //DECL GLOBAL BOOL someBool_OUT = FALSE
             if "someBool" in kuka_inputs.signals():
-                #print('krcrpc.py: ' + f'{kuka_inputs.someBool=}')
-                kuka_inputs.someBool = True
+                kuka_inputs.someBool = self.Bool_ShowVar('someBool_OUT')
+                self.logger.info(f"someBool_OUT OL --> DB {kuka_inputs.someBool=}...")
+
+            # Write BOOL DB ->> OfficeLite [527] //DECL GLOBAL BOOL someBool_IN = FALSE
+            if "someBool" in kuka_outputs.signals():
+                self.Bool_SetVar('someBool_IN', str(kuka_outputs.someBool[0]))
+                self.logger.info(f"someBool_IN DB --> OL {kuka_outputs.someBool=}...")
+
+            # -------
+            # INT
+            # -------
+
+            # Write INT to DB
+            # DECL GLOBAL INT someUInt = 0
+            if "someUInt" in kuka_inputs.signals():
+                # print('krcrpc.py: ' + f'{kuka_inputs.someUInt=}')
+                kuka_inputs.someUInt = 223  # must be value from OfficeLite
 
             self.inputs_queue.queue[0] = dict(kuka_inputs=kuka_inputs, rdk_inputs=rdk_inputs)
-
-            '''
-            # WRITE LaserTrigg var to TRUE
-            message = ("{'method':'Var_SetVar','params':['LaserTrigg','false'],'id':2}\n").encode()
-            print('krcrpc.py: ' + ">>>\t", message)
-            self.socketclient.send(message)
-            response_bytes = self.socketclient.recv(1024)
-            print('krcrpc.py: ' + "<<<\t", response_bytes)
-            '''
 
             # ----------------------------------------------------------
             # MOTION VISUALIZATION VIA $AXIS_ACT
@@ -134,7 +137,6 @@ class KRCRPC(threading.Thread):
 
             # response from socket client (bytes)
             message = "{'method':'Var_ShowVar','params':['$AXIS_ACT'],'id':3}\n".encode()
-            # print('krcrpc.py: ' + ">>>\t", message)
             self.socketclient.send(message)
             response_bytes = self.socketclient.recv(1024)
             # print('krcrpc.py: ' + "<<<\t", response_bytes)
@@ -152,7 +154,6 @@ class KRCRPC(threading.Thread):
             # Запись rob_axis_act в очередь
             self.axis_act_queue.queue[0] = rob_axis_act
             # print(f'{rob_axis_act=}')
-            # print(' ')
 
         except Exception as error:
             self.logger.error(f"Не удалось получить данные из KRC RPC\n"
@@ -161,11 +162,27 @@ class KRCRPC(threading.Thread):
             self.connection_ok = False
             # self.unreachable_time = time.time()
 
-    # def Var_ShowVar(self, var):
-    #     # response from socket client (bytes)
-    #     message = "{'method':'Var_ShowVar','params':['" + var + "'],'id':3}\n".encode()
-    #     # print('krcrpc.py: ' + ">>>\t", message)
-    #     self.socketclient.send(message)
-    #     response_bytes = self.socketclient.recv(1024)
-    #     # print('krcrpc.py: ' + "<<<\t", response_bytes)
-    #     return response_bytes
+    def Bool_SetVar(self, var_name, var_value):
+        message = ("{'method':'Var_SetVar','params':['" + var_name + "','" + var_value + "'],'id':3}\n").encode()
+        self.socketclient.send(message)
+        response_bytes = self.socketclient.recv(1024)
+        # print('krcrpc.py: ' + "<<<\t", response_bytes)
+
+    def Bool_ShowVar(self, var_name):
+        message = ("{'method':'Var_ShowVar','params':['" + var_name + "'],'id':3}\n").encode()
+        self.socketclient.send(message)
+        response_bytes = self.socketclient.recv(1024)
+        # print('krcrpc.py: ' + "<<<\t", response_bytes)
+
+        # RESPONSE PARSING
+        # convert bytes to str
+        response_str = response_bytes.decode('UTF-8')
+        # convert str to json
+        response_json = json.loads(response_str)
+        # split only axis value by <:>
+        var_value = response_json['result']
+        if var_value == 'FALSE':
+            var_value = False
+        if var_value == 'TRUE':
+            var_value = True
+        return var_value
