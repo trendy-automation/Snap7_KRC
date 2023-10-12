@@ -1,10 +1,10 @@
-class Signals(object):
+class Data_IO(dict):
     def __init__(self, d):
         for k, v in d.items():
-            setattr(self, k, Signal(*v) if isinstance(v, dict) else v)
+            setattr(self, k, Signal(*v))
 
     def __getattr__(self, item):
-        return self.key.value
+        return item.value
 
     def __setattr__(self, key, value):
         self.key.value = value

@@ -6,7 +6,7 @@ import time
 import json
 import re
 from queue import Queue
-from obj import Obj
+#from obj import Obj
 
 
 class KRCRPC(threading.Thread):
@@ -33,11 +33,9 @@ class KRCRPC(threading.Thread):
         self.axis_act_queue.put([0**8])
 
         # объект логинга
-        self.logger = logging.getLogger("_krcrpc_.client")
+        self.logger = logging.getLogger("_krcrpc_")
         # logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
 
-        # Сокет для связи с KRC RPC
-        self.socketclient = socket.socket()
         # Статус подключения к KRC RPC
         self.connection_ok = False
         # Время, в течении которого KRC RPC был недоступен
@@ -50,149 +48,124 @@ class KRCRPC(threading.Thread):
         do_run = getattr(cur_thread, "do_run", True)
         if not do_run:
             self.socketclient.close()
-
-        # Подключение к KRC RPC ...
-        try:
-            self.logger.info(f"Подключение к KRC RPC {self.krc_hostname}...")
-            self.socketclient.connect((self.krc_hostname, self.krc_port))
-
-            # Authentication
-            message = ("{'method':'auth','params':['" + self.krc_authkey + "'],'id':1}\n").encode()
-            print(">>>\t", message)
-            self.socketclient.send(message)
-            print("<<<\t", self.socketclient.recv(1024))
-
-            # Robot name
-            message = "{'method':'Var_ShowVar','params':['$TRAFONAME[]'],'id':2}\n".encode()
-            print(">>>\t", message)
-            self.socketclient.send(message)
-            print("<<<\t", self.socketclient.recv(1024))
-            print('')
-
-        except Exception as error:
-            self.logger.error(f"Не удалось подключиться к KRC RPC: {self.krc_hostname}\n"
-                              f"Ошибка {str(error)} {traceback.format_exc()}")
-            # ??
-            # socket.client.logger.disabled = True
-            self.unreachable_time = time.time()
+            self.connection_ok = False
 
         while do_run:
             try:
                 if self.unreachable_time == 0 or (time.time() - self.unreachable_time) > self.reconnect_timeout:
-                    # Check if socket closed
-                    # self.socketclient.close()
-                    # if self.socketclient.fileno() == -1:
-                    #   print(self.socketclient._closed)
-
-                    '''
-                    if not self.socketclient._closed:
+                    if not self.connection_ok:
                         # Подключение к KRC RPC ...
                         try:
-                            self.connection_ok = False
+                            #self.connection_ok = False
                             self.logger.info(f"Подключение к KRC RPC {self.krc_hostname}...")
-                            #self.socketclient.connect((self.krc_hostname, self.krc_port))
-                            self.socketclient.connect(('PCRC-2RL7HHTTRE', 3333))
+                            # Сокет для связи с KRC RPC
+                            self.socketclient = socket.socket(socket.AF_INET,
+                                                              socket.SOCK_STREAM)  # , socket.SO_REUSEADDR
+                            self.socketclient.connect((self.krc_hostname, self.krc_port))
+
+                            self.connection_ok = True
+                            self.unreachable_time = 0
+                            self.logger.info(f"Соединение открыто {self.krc_hostname}")
 
                             # Authentication
-                            #message = "{'method':'auth','params':['" + self.krc_authkey + "'],'id':1}\n".encode()
-                            message = "{'method':'auth','params':['TOP_SECRET_KEY'],'id':1}\n".encode()
-                            print(">>>\t", message)
+                            message = ("{'method':'auth','params':['" + self.krc_authkey + "'],'id':1}\n").encode()
                             self.socketclient.send(message)
-                            print("<<<\t", self.socketclient.recv(1024))
+                            self.logger.info(f"Auth {self.socketclient.recv(1024)}")
 
                             # Robot name
                             message = "{'method':'Var_ShowVar','params':['$TRAFONAME[]'],'id':2}\n".encode()
-                            print(">>>\t", message)
                             self.socketclient.send(message)
-                            print("<<<\t", self.socketclient.recv(1024))
+                            self.logger.info(f"Robot name: {self.socketclient.recv(1024)}")
 
                         except Exception as error:
                             self.logger.error(f"Не удалось подключиться к KRC RPC: {self.krc_hostname}\n"
                                               f"Ошибка {str(error)} {traceback.format_exc()}")
-                            #??
-                            #socket.client.logger.disabled = True
+
+                            self.connection_ok = False
                             self.unreachable_time = time.time()
                     else:
-                        if not self.connection_ok:
-                            self.connection_ok = True
-                            self.unreachable_time = 0
-                            self.logger.info(f"Соединение открыто {self.krc_hostname}")
-                            #??
-                            #socket.client.logger.disabled = False
-                       
                         self.process_krc_rpc()
-                    '''
-
-                self.process_krc_rpc()
 
             except Exception as error:
                 self.logger.error(f"Не удалось обработать цикл класса KRCRPC\n"
                                   f"Ошибка {str(error)} {traceback.format_exc()}")
+                self.socketclient.close()
+                self.connection_ok = False
+
             time.sleep(self.refresh_time)
 
     # Communication with KRC RPC (OfficeLite)
     def process_krc_rpc(self):
-
         try:
             # ----------------------------------------------------------
             # VARIABLES
             # ----------------------------------------------------------
             
-            # Чтение kuka_inputs
-            kuka_inputs = self.inputs_queue.queue[0]['kuka_inputs']
-            # Чтение outputs
+            # Чтение kuka_outputs
             kuka_outputs = self.outputs_queue.queue[0]['kuka_outputs']
-            rdk_outputs = self.outputs_queue.queue[0]['rdk_outputs']
-            #print(f'{kuka_outputs.signals()=}')
 
-            # Изменение kuka_outputs
-            if "someUInt" in kuka_outputs.signals():
-                #print(f'{kuka_outputs.someUInt=}')
-                kuka_outputs.someUInt = 223
-
+            # Чтение inputs
+            kuka_inputs = self.inputs_queue.queue[0]['kuka_inputs']
+            rdk_inputs = self.inputs_queue.queue[0]['rdk_inputs']
 
             # Запись kuka_outputs
-            self.outputs_queue.queue[0] = dict(kuka_outputs=kuka_outputs, rdk_outputs=rdk_outputs)
-            
+            if "someUInt" in kuka_inputs.signals():
+                #print('krcrpc.py: ' + f'{kuka_inputs.someUInt=}')
+                kuka_inputs.someUInt = 223
+
+            if "someBool" in kuka_inputs.signals():
+                #print('krcrpc.py: ' + f'{kuka_inputs.someBool=}')
+                kuka_inputs.someBool = True
+
+            self.inputs_queue.queue[0] = dict(kuka_inputs=kuka_inputs, rdk_inputs=rdk_inputs)
+
             '''
             # WRITE LaserTrigg var to TRUE
             message = ("{'method':'Var_SetVar','params':['LaserTrigg','false'],'id':2}\n").encode()
-            print(">>>\t", message)
+            print('krcrpc.py: ' + ">>>\t", message)
             self.socketclient.send(message)
             response_bytes = self.socketclient.recv(1024)
-            print("<<<\t", response_bytes)
+            print('krcrpc.py: ' + "<<<\t", response_bytes)
             '''
 
             # ----------------------------------------------------------
-            # MOTION
+            # MOTION VISUALIZATION VIA $AXIS_ACT
             # ----------------------------------------------------------
 
             # response from socket client (bytes)
-            # start_time = time.time()
             message = "{'method':'Var_ShowVar','params':['$AXIS_ACT'],'id':3}\n".encode()
-            # print(">>>\t", message)
+            # print('krcrpc.py: ' + ">>>\t", message)
             self.socketclient.send(message)
             response_bytes = self.socketclient.recv(1024)
-            # print("<<<\t", response_bytes)
-            # print("--- response time: %s seconds ---" % (time.time() - start_time))
+            # print('krcrpc.py: ' + "<<<\t", response_bytes)
 
             # RESPONSE PARSING
             # convert bytes to str
             response_str = response_bytes.decode('UTF-8')
-
             # convert str to json
             response_json = json.loads(response_str)
-
             # split only axis value by <:>
             raw_axis_act = re.split(': A1 |, A\d |, E\d ', response_json['result'])
-
-            # 4 cut and convert string to float
+            # cut and convert string to float
             rob_axis_act = [float(axis) for axis in raw_axis_act[1:9]]
+
+            # Запись rob_axis_act в очередь
             self.axis_act_queue.queue[0] = rob_axis_act
-            #print(f'{rob_axis_act=}')
-            #print(' ')
+            # print(f'{rob_axis_act=}')
+            # print(' ')
 
         except Exception as error:
             self.logger.error(f"Не удалось получить данные из KRC RPC\n"
                               f"Ошибка {str(error)} {traceback.format_exc()}")
             self.socketclient.close()
+            self.connection_ok = False
+            # self.unreachable_time = time.time()
+
+    # def Var_ShowVar(self, var):
+    #     # response from socket client (bytes)
+    #     message = "{'method':'Var_ShowVar','params':['" + var + "'],'id':3}\n".encode()
+    #     # print('krcrpc.py: ' + ">>>\t", message)
+    #     self.socketclient.send(message)
+    #     response_bytes = self.socketclient.recv(1024)
+    #     # print('krcrpc.py: ' + "<<<\t", response_bytes)
+    #     return response_bytes

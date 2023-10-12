@@ -1,9 +1,8 @@
 import threading
-
-from robodk.robodialogs import *
 from robodk.robolink import *  # API to communicate with RoboDK
-from queue import Queue
-from obj import Obj
+#from queue import Queue
+#from obj import Obj
+import logging
 
 
 class RDK(threading.Thread):
@@ -16,21 +15,23 @@ class RDK(threading.Thread):
         self.robotname = rdk_config['robotname']
         self.cnt = rdk_config['CNT']
         self.speed = rdk_config['speed']
+        self.refresh_time = rdk_config['refresh_time']
 
         self.inputs_queue = rdk_config['inputs_queue']
         self.outputs_queue = rdk_config['outputs_queue']
         self.axis_act_queue = rdk_config['axis_act_queue']
-        self.refresh_time = rdk_config['refresh_time']
+
+        # объект логинга
+        self.logger = logging.getLogger("_rdk_   ")
+
     def run(self):
 
         # Any interaction with RoboDK must be done through RDK:
         RDK = Robolink()
-
         robot = RDK.Item(self.robotname)
 
         # Get the current position of the TCP with respect to the reference frame:
         target_ref = robot.Pose()
-
         # Move the robot to the first point:
         robot.MoveJ(target_ref)
 
@@ -40,30 +41,31 @@ class RDK(threading.Thread):
         robot.setRounding(self.cnt)  # Set the rounding parameter (Also known as: CNT, APO/C_DIS, ZoneData, Blending radius, cornering, ...)
         robot.setSpeed(self.speed)  # Set linear speed in mm/s
 
+        self.logger.info(f"CNT {self.cnt}")
+        self.logger.info(f"Speed {self.speed}")
 
-        '''
-        print(self.robotname)
-        print(self.cnt)
-        print(self.speed)
-
-        '''
-        
         # Communication with controller (OfficeLite)
         while True:
-            robot.setJoints(self.axis_act_queue.queue[0]) #rob_axis_act стримит krcrpc.py
-            # Чтение rdk_inputs
-            rdk_inputs = self.inputs_queue.queue[0]['rdk_inputs']
-            # Чтение outputs
-            kuka_outputs = self.outputs_queue.queue[0]['kuka_outputs']
+            # rob_axis_act записывается в очередь в krcrpc.py
+            robot.setJoints(self.axis_act_queue.queue[0])
+
+            # Чтение входов OL и RoboDK из очереди
+            kuka_inputs = self.inputs_queue.queue[0]['kuka_inputs']
+
+            # Write values to RDK
             rdk_outputs = self.outputs_queue.queue[0]['rdk_outputs']
-            #print(f'{rdk_outputs.signals()=}')
+            for output_signal_name in rdk_outputs.signals():
+                # print('rdk.py: ' + f'{output_signal_name=} {rdk_outputs.get(output_signal_name)=}')
+                RDK.setParam(output_signal_name, int(rdk_outputs.get(output_signal_name)))
+                # RDK.setParam('IO_1', 'True')
 
-            # Изменение rdk_outputs
-            if "RDK_IO_OUT1" in rdk_outputs.signals():
-                #print(f'{rdk_outputs.RDK_IO_OUT1=}')
-                rdk_outputs.RDK_IO_OUT1 = True
-
+            # Read values from RDK
+            rdk_inputs = self.inputs_queue.queue[0]['rdk_inputs']
+            for input_signal_name in rdk_inputs.signals():
+                # print('rdk.py: ' + f'{rdk_inputs.get(input_signal_name)=}')
+                rdk_inputs.set(input_signal_name, bool(RDK.getParam(input_signal_name)))
 
             # Запись rdk_outputs
-            self.outputs_queue.queue[0] = dict(kuka_outputs=kuka_outputs, rdk_outputs=rdk_outputs)
+            self.inputs_queue.queue[0] = dict(kuka_inputs=kuka_inputs, rdk_inputs=rdk_inputs)
+
             time.sleep(self.refresh_time)
