@@ -1,52 +1,38 @@
 class Obj(object):
     def __init__(self, d):
         for k, v in d.items():
-            # setattr(self, k, Signal(*v) if isinstance(v, dict) else v)
             setattr(self, k, Obj(v) if isinstance(v, dict) else v)
 
-
     def __setattr__(self, key, value):
-        if key in self.__dict__ and not isinstance(value, list):
-            # setattr(self, key[0], value)
-            #print(f'{key=},{value=},{self.__dict__[key]=}')
+        # print(f'obj.py {key=}, {value=}')
+        if not isinstance(value, list) and key in self.__dict__:
             self.__dict__[key][0] = value
         else:
             self.__dict__[key] = value
 
     def __getattr__(self, item):
-        # return getattr(self, item[0])
         if isinstance(item, dict):
             return self.__dict__[item][0]
-        else:
+        elif item in ['__deepcopy__', '__setstate__']:
             return self.__dict__.__getattr__(item)
+        else:
+            return self.__dict__[item]
 
     def __iter__(self):
-        return iter(self.__dict__.values())
+        return iter(self.__dict__.items())
 
     def get(self, item):
-        return getattr(self, item)
+        return self.__dict__[item][0]
+        # return self.__getattr__(item)
         # return self.__dict__[item]
+        #return getattr(self, item)
+
+    def set(self, key, value):
+        self.__setattr__(key, value)
+        # if key in self.__dict__ and not isinstance(value, list):
+        #     self.__dict__[key][0] = value
+        # else:
+        #     self.__dict__[key] = value
 
     def signals(self):
         return self.__dict__.keys()
-
-
-    # def __ne__(self, other):
-    #     return not self.__eq__(other)
-    #
-    # def __eq__(self, other):
-    #     result = False
-    #     if isinstance(self, list) and isinstance(other, list) and len(self) == len(other):
-    #         result = all(i == j for i, j in zip(self, other))
-    #     elif isinstance(self, dict) and isinstance(other, dict):
-    #         if set(self.__dict__.keys()) == set(other.__dict__.keys()):
-    #             result = all(i == j for i, j in zip(self.__dict__.iteritems(), other.__dict__.iteritems()))
-    #     return result
-
-        # def __set__(self, instance, value):
-    #    if isinstance(instance, list) and isinstance(value, list):
-    #        instance = value
-    #    elif isinstance(instance, dict) and isinstance(value, dict):
-    #            keys = set(instance.__dict__.keys()) & set(value.__dict__.keys())
-    #            for key in keys():
-    #                instance.__setattr__(key, value.__getattribute__(key))

@@ -1,16 +1,12 @@
 import logging
-import queue
-import time
 import snap7  # pip install python-snap7
 import traceback
 import threading
 import numpy as np  # pip install numpy
 from queue import Queue
 from obj import Obj
+import time
 import copy
-
-from robodk.robodialogs import *
-from robodk.robolink import *  # API to communicate with RoboDK
 
 
 class PLC(threading.Thread):
@@ -29,12 +25,12 @@ class PLC(threading.Thread):
         # Время обновления
         self.refresh_time = plc_config['refresh_time']
 
+        # Создание очереди
         self.inputs_queue = Queue()
         self.outputs_queue = Queue()
 
         # KUKA IN SIGNALS
         self.kuka_db_in = Obj({
-            # Correct offsets
             "someString": ["", "String", 0, 0],
             "someChar": ["", "Char", 256, 0],
             "someUInt": [0, "UInt", 258, 0],
@@ -44,7 +40,6 @@ class PLC(threading.Thread):
 
         # KUKA OUT SIGNALS
         self.kuka_db_out = Obj({
-            # Correct offsets
             "someString": ["", "String", 0, 0],
             "someChar": ["", "Char", 256, 0],
             "someUInt": [0, "UInt", 258, 0],
@@ -52,36 +47,39 @@ class PLC(threading.Thread):
             "someBool": [False, "Bool", 261, 0],
         })
 
-        # RDK IN SIGNALS
-        self.rdk_db_in = Obj({
-            "RDK_IO_IN1": [False, "Bool", 262, 0], 
-            "RDK_IO_IN2": [False, "Bool", 262, 1],
-            "RDK_IO_IN3": [False, "Bool", 262, 2],
-            "RDK_IO_IN4": [False, "Bool", 262, 3],
-            "RDK_IO_IN5": [False, "Bool", 262, 4],
-            "RDK_IO_IN6": [False, "Bool", 262, 5],
-            "RDK_IO_IN7": [False, "Bool", 262, 6],
-            "RDK_IO_IN8": [False, "Bool", 262, 7],
-            "RDK_IO_IN9": [False, "Bool", 263, 0],
-            "RDK_IO_IN10": [False, "Bool", 263, 1],
-        })
-
         # RDK OUT SIGNALS
         self.rdk_db_out = Obj({
-            "RDK_IO_OUT1": [False, "Bool", 264, 0],
-            "RDK_IO_OUT2": [False, "Bool", 264, 1],
-            "RDK_IO_OUT3": [False, "Bool", 264, 2],
-            "RDK_IO_OUT4": [False, "Bool", 264, 3],
-            "RDK_IO_OUT5": [False, "Bool", 264, 4],
-            "RDK_IO_OUT6": [False, "Bool", 264, 5],
-            "RDK_IO_OUT7": [False, "Bool", 264, 6],
-            "RDK_IO_OUT8": [False, "Bool", 264, 7],
-            "RDK_IO_OUT9": [False, "Bool", 265, 0],
-            "RDK_IO_OUT10": [False, "Bool", 265, 1]
+            "IO_1": [False, "Bool", 264, 0],
+            "IO_2": [False, "Bool", 264, 1],
+            "IO_3": [False, "Bool", 264, 2],
+            "IO_4": [False, "Bool", 264, 3],
+            "IO_5": [False, "Bool", 264, 4],
+            "IO_6": [False, "Bool", 264, 5],
+            "IO_7": [False, "Bool", 264, 6],
+            "IO_8": [False, "Bool", 264, 7],
+            "IO_9": [False, "Bool", 265, 0],
+            "IO_10": [False, "Bool", 265, 1]
         })
 
-        self.inputs_queue.put(dict(kuka_inputs=copy.deepcopy(self.kuka_db_in), rdk_inputs=copy.deepcopy(self.rdk_db_in)))
-        self.outputs_queue.put(dict(kuka_outputs=copy.deepcopy(self.kuka_db_out), rdk_outputs=copy.deepcopy(self.rdk_db_out)))
+        # RDK IN SIGNALS
+        self.rdk_db_in = Obj({
+            "IO_11": [False, "Bool", 262, 0],
+            "IO_12": [False, "Bool", 262, 1],
+            "IO_13": [False, "Bool", 262, 2],
+            "IO_14": [False, "Bool", 262, 3],
+            "IO_15": [False, "Bool", 262, 4],
+            "IO_16": [False, "Bool", 262, 5],
+            "IO_17": [False, "Bool", 262, 6],
+            "IO_18": [False, "Bool", 262, 7],
+            "IO_19": [False, "Bool", 263, 0],
+            "IO_20": [False, "Bool", 263, 1],
+        })
+
+        # Добавление в очередь
+        self.inputs_queue.put(dict(kuka_inputs=copy.deepcopy(self.kuka_db_in),
+                                   rdk_inputs=copy.deepcopy(self.rdk_db_in)))
+        self.outputs_queue.put(dict(kuka_outputs=copy.deepcopy(self.kuka_db_out),
+                                    rdk_outputs=copy.deepcopy(self.rdk_db_out)))
 
         # объект логинга
         self.logger = logging.getLogger("_plc_.client")
@@ -155,7 +153,7 @@ class PLC(threading.Thread):
 
     def set_int(self, db_number, offsetbyte, tag_value, value_type) -> int:
         tag_data = bytearray(self.massa[value_type])
-        assert value_type[1]!='U' or tag_value>=0, f"Запись отрицательного значения в тип {value_type}"
+        assert value_type[1] != 'U' or tag_value >= 0, f"Запись отрицательного значения в тип {value_type}"
         snap7.util.set_int(tag_data, 0, tag_value)
         return self.snap7client.db_write(db_number, offsetbyte, tag_data)
 
@@ -170,7 +168,7 @@ class PLC(threading.Thread):
         tag_value = f"%.{len_arr}s" % tag_value
         tag_data = bytearray(len_arr + 2)
         snap7.util.set_string(tag_data, 0, tag_value, len_arr)
-        tag_data[0] = np.uint8(len_arr) #np.uint8(len(tag_data)-2)
+        tag_data[0] = np.uint8(len_arr)  # np.uint8(len(tag_data)-2)
         tag_data[1] = np.uint8(len(tag_value))      
         return self.snap7client.db_write(db_number, offsetbyte, tag_data)
 
@@ -189,24 +187,26 @@ class PLC(threading.Thread):
         return 0
 
     def set_signals(self, db: Obj):
-        for output_signal in db:
-            print(f'{output_signal=}')
+        for output_signal_name, output_signal in db:
+            # print('plc.py: ' + f'{output_signal=}')
             self.set_db_value(output_signal)
-        #for output_signal in db.signals():
-        #    self.set_db_value(db.get(output_signal))
 
     def get_signals(self, db: Obj):
-        for input_signal in db:
-            #print(f'{input_signal=}')
-            input_signal = self.get_db_value(input_signal)
+        for input_signal_name, input_signal in db:
+            # print('plc.py: before ' + f'{input_signal=}')
+            db.set(input_signal_name, self.get_db_value(input_signal))
+            #print('plc.py: ' + f'{db.get(input_signal_name)=}')
+            # print('plc.py: after ' + f'{input_signal=}')
 
     def run(self):
-        self.logger.info(f"Connection with PLC {self.plc_ip} started")
+        self.logger.info('plc.py: ' + f"Connection with PLC {self.plc_ip} started")
         cur_thread = threading.current_thread()
+
         # Основной цикл
         do_run = getattr(cur_thread, "do_run", True)
-        if do_run==False:
+        if not do_run:
             self.snap7client.disconnect()
+
         while do_run:
             try:
                 if self.unreachable_time == 0 or (time.time() - self.unreachable_time) > self.reconnect_timeout:
@@ -214,52 +214,58 @@ class PLC(threading.Thread):
                         # Подключение к контроллеру ...
                         try:
                             self.connection_ok = False
-                            self.logger.info(f"Подключение к контроллеру {self.plc_ip}...")
+                            self.logger.info('plc.py: ' + f"Подключение к контроллеру {self.plc_ip}...")
                             self.snap7client.connect(self.plc_ip, 0, 1)
 
                         except Exception as error:
-                            self.logger.error(f"Не удалось подключиться к контроллеру: {self.plc_ip}\n"
-                                              f"Ошибка {str(error)} {traceback.format_exc()}")
+                            self.logger.error('plc.py: ' + f"Не удалось подключиться к контроллеру: {self.plc_ip}\n"
+                                              'plc.py: ' + f"Ошибка {str(error)} {traceback.format_exc()}")
                             snap7.client.logger.disabled = True
                             self.unreachable_time = time.time()
                     else:
                         if not self.connection_ok:
                             self.connection_ok = True
                             self.unreachable_time = 0
-                            self.logger.info(f"Соединение открыто {self.plc_ip}")
+                            self.logger.info('plc.py: ' + f"Соединение открыто {self.plc_ip}")
                             snap7.client.logger.disabled = False
-                            self.get_signals(self.kuka_db_out)
-                            self.get_signals(self.rdk_db_out)
+                            self.get_signals(self.kuka_db_in)
+                            self.get_signals(self.rdk_db_in)
+
                         self.process_io()
 
             except Exception as error:
-                self.logger.error(f"Не удалось обработать цикл класса plc\n"
-                                  f"Ошибка {str(error)} {traceback.format_exc()}")
+                self.logger.error('plc.py: ' + f"Не удалось обработать цикл класса plc\n"
+                                  'plc.py: ' + f"Ошибка {str(error)} {traceback.format_exc()}")
             time.sleep(self.refresh_time)
 
     def process_io(self):
-
         try:
-            self.get_signals(self.kuka_db_in)
-            self.get_signals(self.rdk_db_in)
-            self.inputs_queue.queue[0] = dict(kuka_inputs=copy.deepcopy(self.kuka_db_in), rdk_inputs=copy.deepcopy(self.rdk_db_in))
+            # Считывание входных сигналов
+            self.get_signals(self.kuka_db_out)
+            self.get_signals(self.rdk_db_out)
 
-            outputs = self.outputs_queue.queue[0]
-            kuka_outputs = outputs['kuka_outputs']
-            rdk_outputs = outputs['rdk_outputs']
+            #print(f'{self.rdk_db_out.IO_1=}')
 
-            # Сравнение предыдущих значений выходов с текущими
-            if self.kuka_db_out != kuka_outputs:
-                self.set_signals(kuka_outputs)
-                self.kuka_db_out = kuka_outputs
-            print(f'{rdk_outputs.RDK_IO_OUT1=}')
-            #print(f'{self.rdk_db_out.RDK_IO_OUT1=}')
-            print(f'{(self.rdk_db_out != rdk_outputs)=}')
-            if self.rdk_db_out != rdk_outputs:
-                self.set_signals(rdk_outputs)
-                self.rdk_db_out = rdk_outputs
+            self.outputs_queue.queue[0] = dict(kuka_outputs=copy.deepcopy(self.kuka_db_out),
+                                               rdk_outputs=copy.deepcopy(self.rdk_db_out))
+
+            inputs = self.inputs_queue.queue[0]
+            kuka_inputs = inputs['kuka_inputs']
+            rdk_inputs = inputs['rdk_inputs']
+
+            # Сравнение предыдущих значений выходов с текущими (не тратим время на перезапись)
+            if self.kuka_db_in != kuka_inputs:
+                self.set_signals(kuka_inputs)
+                self.kuka_db_in = copy.deepcopy(kuka_inputs)
+
+            if self.rdk_db_in != rdk_inputs:
+                self.set_signals(rdk_inputs)
+                self.rdk_db_in = copy.deepcopy(rdk_inputs)
+            #else:
+            #    print(f'plc.py: {rdk_inputs.__dict__.values()=} {self.rdk_db_in.__dict__.values()=}')
+            # print('plc.py: ' + f'{rdk_outputs.RDK_IO_OUT1=}')
+
         except Exception as error:
-            self.logger.error(f"Не удалось обработать данные из DB{self.db_num}\n"
-                              f"Ошибка {str(error)} {traceback.format_exc()}")
+            self.logger.error('plc.py: ' + f"Не удалось обработать данные из DB{self.db_num}\n"
+                              'plc.py: ' + f"Ошибка {str(error)} {traceback.format_exc()}")
             self.snap7client.disconnect()
-
