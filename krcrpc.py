@@ -157,7 +157,6 @@ class KRCRPC(threading.Thread):
 
             # response from socket client (bytes)
             message = "{'method':'Var_ShowVar','params':['$AXIS_ACT'],'id':3}\n".encode()
-            # print('krcrpc.py: ' + ">>>\t", message)
             self.socketclient.send(message)
             response_bytes = self.socketclient.recv(1024)
             # print('krcrpc.py: ' + "<<<\t", response_bytes)

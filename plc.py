@@ -50,20 +50,6 @@ class PLC(threading.Thread):
 
         # RDK IN SIGNALS
         self.rdk_db_out = Data_IO({
-            "IO_1": [False, "Bool", 526, 0],
-            "IO_2": [False, "Bool", 526, 1],
-            "IO_3": [False, "Bool", 526, 2],
-            "IO_4": [False, "Bool", 526, 3],
-            "IO_5": [False, "Bool", 526, 4],
-            "IO_6": [False, "Bool", 526, 5],
-            "IO_7": [False, "Bool", 526, 6],
-            "IO_8": [False, "Bool", 526, 7],
-            "IO_9": [False, "Bool", 527, 0],
-            "IO_10": [False, "Bool", 527, 1]
-        })
-
-        # RDK OUT SIGNALS
-        self.rdk_db_in = Data_IO({
             "IO_11": [False, "Bool", 524, 0],
             "IO_12": [False, "Bool", 524, 1],
             "IO_13": [False, "Bool", 524, 2],
@@ -74,6 +60,20 @@ class PLC(threading.Thread):
             "IO_18": [False, "Bool", 524, 7],
             "IO_19": [False, "Bool", 525, 0],
             "IO_20": [False, "Bool", 525, 1],
+        })
+
+        # RDK OUT SIGNALS
+        self.rdk_db_in = Data_IO({
+            "IO_1": [False, "Bool", 526, 0],
+            "IO_2": [False, "Bool", 526, 1],
+            "IO_3": [False, "Bool", 526, 2],
+            "IO_4": [False, "Bool", 526, 3],
+            "IO_5": [False, "Bool", 526, 4],
+            "IO_6": [False, "Bool", 526, 5],
+            "IO_7": [False, "Bool", 526, 6],
+            "IO_8": [False, "Bool", 526, 7],
+            "IO_9": [False, "Bool", 527, 0],
+            "IO_10": [False, "Bool", 527, 1]
         })
 
         # Добавление в очередь
@@ -120,17 +120,18 @@ class PLC(threading.Thread):
         return snap7.util.get_string(byte_array_read, 0)
 
     def get_db_value(self, tag: Tag) -> Tag:
+        tag.value = None
         if tag.value_type == 'Bool':
-            return [self.get_bool(self.db_num, tag.offsetbyte, tag.offsetbit), tag.value_type, tag.offsetbyte, tag.offsetbit]
+            tag.value = self.get_bool(tag)
         if tag.value_type == "USInt":
-            return [self.get_usint(self.db_num, tag.offsetbyte), tag.value_type, tag.offsetbyte, tag.offsetbit]
+            tag.value = self.get_usint(tag)
         if "Int" in tag.value_type and tag.value_type in self.massa:
-            return [self.get_int(self.db_num, tag.offsetbyte, tag.value_type), tag.value_type, tag.offsetbyte, tag.offsetbit]
+            tag.value = self.get_int(tag)
         if tag.value_type == 'Char':
-            return [self.get_char(self.db_num, tag.offsetbyte), tag.value_type, tag.offsetbyte, tag.offsetbit]
+            tag.value = self.get_char(tag)
         if tag.value_type.startswith('String'):
-            return [self.get_string(self.db_num, tag.offsetbyte, tag.value_type), tag.value_type, tag.offsetbyte, tag.offsetbit]
-        return None
+            tag.value = self.get_string(tag)
+        return tag
 
     def set_bool(self, tag: Tag) -> int:
         tag_data = self.snap7client.db_read(self.db_num, tag.offsetbyte, 1)
@@ -165,29 +166,29 @@ class PLC(threading.Thread):
         tag_data = bytearray(len_arr + 2)
         snap7.util.set_string(tag_data, 0, tag.tag_value, len_arr)
         tag_data[0] = np.uint8(len_arr)  # np.uint8(len(tag_data)-2)
-        tag_data[1] = np.uint8(len(tag.tag_value))
+        tag_data[1] = np.uint8(len(tag.tag_value))      
         return self.snap7client.db_write(self.db_num, tag.offsetbyte, tag_data)
 
     def set_db_value(self, tag: Tag) -> int:
         if tag.value_type == 'Bool':
-            return self.set_bool(self.db_num, tag.offsetbyte, tag.offsetbit, tag.tag_value)
+            return self.set_bool(tag)
         if tag.value_type == "USInt":
-            return self.set_usint(self.db_num, tag.offsetbyte, tag.tag_value)
+            return self.set_usint(tag)
         if "Int" in tag.value_type and tag.value_type in self.massa:
-            return self.set_int(self.db_num, tag.offsetbyte, tag.tag_value, tag.value_type)
+            return self.set_int(tag)
         if tag.value_type == 'Char':
-            return self.set_char(self.db_num, tag.offsetbyte, tag.tag_value)
+            return self.set_char(tag)
         if tag.value_type.startswith('String'):
-            return self.set_string(self.db_num, tag.offsetbyte, tag.tag_value, tag.value_type)
+            return self.set_string(tag)
         return 0
 
     def set_signals(self, db: Data_IO):
-        for output_signal_name, output_signal in db:
+        for output_signal in db:
             self.set_db_value(output_signal)
 
     def get_signals(self, db: Data_IO):
-        for input_signal_name, input_signal in db:
-            db.set(input_signal_name, self.get_db_value(input_signal))
+        for input_signal in db:
+            input_signal = self.get_db_value(input_signal)
 
     def run(self):
         self.logger.info(f"Connection with PLC {self.plc_ip} started")
