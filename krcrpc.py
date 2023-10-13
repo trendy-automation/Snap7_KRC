@@ -108,14 +108,21 @@ class KRCRPC(threading.Thread):
             kuka_inputs = self.inputs_queue.queue[0]['kuka_inputs']
             rdk_inputs = self.inputs_queue.queue[0]['rdk_inputs']
 
-            # Запись kuka_outputs
-            if "someUInt" in kuka_inputs:
-                #print('krcrpc.py: ' + f'{kuka_inputs.someUInt=}')
-                kuka_inputs.someUInt = 223
+            # # Запись kuka_outputs
+            # if "someUInt" in kuka_inputs:
+            #     #print('krcrpc.py: ' + f'{kuka_inputs.someUInt=}')
+            #     kuka_inputs.someUInt.value = 223
+            # if "someBool" in kuka_inputs:
+            #     #print('krcrpc.py: ' + f'{kuka_inputs.someBool=}')
+            #     kuka_inputs.someBool.value = True
 
-            if "someBool" in kuka_inputs:
-                #print('krcrpc.py: ' + f'{kuka_inputs.someBool=}')
-                kuka_inputs.someBool = True
+            # Write values to OfficeLite
+            # for output_signal in kuka_outputs:
+            #     OL.setParam(output_signal.name, int(output_signal.value))
+
+            # Read values from OfficeLite
+            # for input_signal in kuka_inputs:
+            #     input_signal.value = OL.getParam(input_signal.name)
 
             self.inputs_queue.queue[0] = dict(kuka_inputs=kuka_inputs, rdk_inputs=rdk_inputs)
 
