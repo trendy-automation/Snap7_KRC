@@ -41,39 +41,39 @@ class PLC(threading.Thread):
 
         # KUKA OUT SIGNALS
         self.kuka_db_out = Data_IO({
-            "someString": ["", "String", 266, 0],
-            "someChar": ["", "Char", 522, 0],
-            "someUInt": [0, "UInt", 524, 0],
-            "someUSInt": [0, "USInt", 526, 0],
-            "someBool": [False, "Bool", 527, 0],
-        })
-
-        # RDK OUT SIGNALS
-        self.rdk_db_out = Data_IO({
-            "IO_1": [False, "Bool", 264, 0],
-            "IO_2": [False, "Bool", 264, 1],
-            "IO_3": [False, "Bool", 264, 2],
-            "IO_4": [False, "Bool", 264, 3],
-            "IO_5": [False, "Bool", 264, 4],
-            "IO_6": [False, "Bool", 264, 5],
-            "IO_7": [False, "Bool", 264, 6],
-            "IO_8": [False, "Bool", 264, 7],
-            "IO_9": [False, "Bool", 265, 0],
-            "IO_10": [False, "Bool", 265, 1]
+            "someString": ["", "String", 262, 0],
+            "someChar": ["", "Char", 518, 0],
+            "someUInt": [0, "UInt", 520, 0],
+            "someUSInt": [0, "USInt", 522, 0],
+            "someBool": [False, "Bool", 523, 0],
         })
 
         # RDK IN SIGNALS
+        self.rdk_db_out = Data_IO({
+            "IO_1": [False, "Bool", 526, 0],
+            "IO_2": [False, "Bool", 526, 1],
+            "IO_3": [False, "Bool", 526, 2],
+            "IO_4": [False, "Bool", 526, 3],
+            "IO_5": [False, "Bool", 526, 4],
+            "IO_6": [False, "Bool", 526, 5],
+            "IO_7": [False, "Bool", 526, 6],
+            "IO_8": [False, "Bool", 526, 7],
+            "IO_9": [False, "Bool", 527, 0],
+            "IO_10": [False, "Bool", 527, 1]
+        })
+
+        # RDK OUT SIGNALS
         self.rdk_db_in = Data_IO({
-            "IO_11": [False, "Bool", 262, 0],
-            "IO_12": [False, "Bool", 262, 1],
-            "IO_13": [False, "Bool", 262, 2],
-            "IO_14": [False, "Bool", 262, 3],
-            "IO_15": [False, "Bool", 262, 4],
-            "IO_16": [False, "Bool", 262, 5],
-            "IO_17": [False, "Bool", 262, 6],
-            "IO_18": [False, "Bool", 262, 7],
-            "IO_19": [False, "Bool", 263, 0],
-            "IO_20": [False, "Bool", 263, 1],
+            "IO_11": [False, "Bool", 524, 0],
+            "IO_12": [False, "Bool", 524, 1],
+            "IO_13": [False, "Bool", 524, 2],
+            "IO_14": [False, "Bool", 524, 3],
+            "IO_15": [False, "Bool", 524, 4],
+            "IO_16": [False, "Bool", 524, 5],
+            "IO_17": [False, "Bool", 524, 6],
+            "IO_18": [False, "Bool", 524, 7],
+            "IO_19": [False, "Bool", 525, 0],
+            "IO_20": [False, "Bool", 525, 1],
         })
 
         # Добавление в очередь

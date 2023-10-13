@@ -142,12 +142,22 @@ class KRCRPC(threading.Thread):
 
             self.inputs_queue.queue[0] = dict(kuka_inputs=kuka_inputs, rdk_inputs=rdk_inputs)
 
+            '''
+            # WRITE LaserTrigg var to TRUE
+            message = ("{'method':'Var_SetVar','params':['LaserTrigg','false'],'id':2}\n").encode()
+            print('krcrpc.py: ' + ">>>\t", message)
+            self.socketclient.send(message)
+            response_bytes = self.socketclient.recv(1024)
+            print('krcrpc.py: ' + "<<<\t", response_bytes)
+            '''
+
             # ----------------------------------------------------------
             # MOTION VISUALIZATION VIA $AXIS_ACT
             # ----------------------------------------------------------
 
             # response from socket client (bytes)
             message = "{'method':'Var_ShowVar','params':['$AXIS_ACT'],'id':3}\n".encode()
+            # print('krcrpc.py: ' + ">>>\t", message)
             self.socketclient.send(message)
             response_bytes = self.socketclient.recv(1024)
             # print('krcrpc.py: ' + "<<<\t", response_bytes)
