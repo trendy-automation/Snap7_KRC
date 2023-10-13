@@ -100,10 +100,21 @@ class KRCRPC(threading.Thread):
             # ----------------------------------------------------------
             # VARIABLES
             # ----------------------------------------------------------
-
+            
+            # Чтение kuka_outputs
             kuka_outputs = self.outputs_queue.queue[0]['kuka_outputs']
+
+            # Чтение inputs
             kuka_inputs = self.inputs_queue.queue[0]['kuka_inputs']
             rdk_inputs = self.inputs_queue.queue[0]['rdk_inputs']
+
+            # Write values to OfficeLite
+            # for output_signal in kuka_outputs:
+            #     OL.setParam(output_signal.name, int(output_signal.value))
+
+            # Read values from OfficeLite
+            # for input_signal in kuka_inputs:
+            #     input_signal.value = OL.getParam(input_signal.name)
 
             # -------
             # BOOL
