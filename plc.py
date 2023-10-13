@@ -166,7 +166,7 @@ class PLC(threading.Thread):
         tag_data = bytearray(len_arr + 2)
         snap7.util.set_string(tag_data, 0, tag.tag_value, len_arr)
         tag_data[0] = np.uint8(len_arr)  # np.uint8(len(tag_data)-2)
-        tag_data[1] = np.uint8(len(tag.tag_value))      
+        tag_data[1] = np.uint8(len(tag.tag_value))
         return self.snap7client.db_write(self.db_num, tag.offsetbyte, tag_data)
 
     def set_db_value(self, tag: Tag) -> int:
