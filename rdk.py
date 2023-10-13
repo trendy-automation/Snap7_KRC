@@ -1,7 +1,5 @@
 import threading
 from robodk.robolink import *  # API to communicate with RoboDK
-#from queue import Queue
-#from obj import Obj
 import logging
 
 
