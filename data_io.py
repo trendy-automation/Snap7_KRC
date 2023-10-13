@@ -18,6 +18,8 @@ class Data_IO(dict):
     def __iter__(self):
         for attr, value in self.__dict__.items():
             yield value
+
+
 class Tag:
     def __init__(self, value, value_type: str, offsetbyte: int, offsetbit: int, name: str):
         self.value = value
@@ -25,6 +27,7 @@ class Tag:
         self.offsetbyte = offsetbyte
         self.offsetbit = offsetbit
         self.name = name
+
     def __eq__(self, other):
         return \
             self.value == other.value and \

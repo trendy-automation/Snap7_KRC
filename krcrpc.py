@@ -8,9 +8,6 @@ import re
 from queue import Queue
 
 
-# from obj import Obj
-
-
 class KRCRPC(threading.Thread):
     def __init__(self, krc_rpc_config):
         print("krcrpc.py")
@@ -36,8 +33,6 @@ class KRCRPC(threading.Thread):
 
         # объект логинга
         self.logger = logging.getLogger("_krcrpc_")
-        # logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
-
         # Статус подключения к KRC RPC
         self.connection_ok = False
         # Время, в течении которого KRC RPC был недоступен
@@ -61,8 +56,7 @@ class KRCRPC(threading.Thread):
                             # self.connection_ok = False
                             self.logger.info(f"Подключение к KRC RPC {self.krc_hostname}...")
                             # Сокет для связи с KRC RPC
-                            self.socketclient = socket.socket(socket.AF_INET,
-                                                              socket.SOCK_STREAM)  # , socket.SO_REUSEADDR
+                            self.socketclient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                             self.socketclient.connect((self.krc_hostname, self.krc_port))
 
                             self.connection_ok = True
@@ -100,7 +94,7 @@ class KRCRPC(threading.Thread):
     def process_krc_rpc(self):
         try:
             # ----------------------------------------------------------
-            # VARIABLES
+            # VARIABLES between PLC SIM and OfficeLite
             # ----------------------------------------------------------
 
             # Чтение kuka_outputs
@@ -110,33 +104,17 @@ class KRCRPC(threading.Thread):
             kuka_inputs = self.inputs_queue.queue[0]['kuka_inputs']
             rdk_inputs = self.inputs_queue.queue[0]['rdk_inputs']
 
-            # Write values to OfficeLite
+            # Write values from DB and write to OfficeLite
             for output_signal in kuka_outputs:
                 self.setVar(output_signal)
+                # self.logger.info(f"OL <-- DB {self.setVar(output_signal)=}...")
 
-            # Read values from OfficeLite
+            # Read values from OfficeLite and write to DB
             for input_signal in kuka_inputs:
                 input_signal.value = self.getVar(input_signal)
-
-            # # Write BOOL OfficeLite --> DB [261] //DECL GLOBAL BOOL someBool_OUT = FALSE
-            # if "someBool" in kuka_inputs.keys():
-            #     kuka_inputs.someBool.value = self.getVar(kuka_inputs.someBool)
-            #     self.logger.info(f"someBool_OUT OL --> DB {kuka_inputs.someBool.value=}...")
-            # # Write BOOL DB ->> OfficeLite [527] //DECL GLOBAL BOOL someBool_IN = FALSE
-            # if "someBool" in kuka_outputs.keys():
-            #     self.setVar(kuka_outputs.someBool.value)
-            #     # self.logger.info(f"someBool_IN DB --> OL {kuka_outputs.someBool.value=}...")
+                # self.logger.info(f"OL --> DB {input_signal.value=}...")
 
             self.inputs_queue.queue[0] = dict(kuka_inputs=kuka_inputs, rdk_inputs=rdk_inputs)
-
-            '''
-            # WRITE LaserTrigg var to TRUE
-            message = ("{'method':'Var_SetVar','params':['LaserTrigg','false'],'id':2}\n").encode()
-            print('krcrpc.py: ' + ">>>\t", message)
-            self.socketclient.send(message)
-            response_bytes = self.socketclient.recv(1024)
-            print('krcrpc.py: ' + "<<<\t", response_bytes)
-            '''
 
             # ----------------------------------------------------------
             # MOTION VISUALIZATION VIA $AXIS_ACT
@@ -144,10 +122,8 @@ class KRCRPC(threading.Thread):
 
             # response from socket client (bytes)
             message = "{'method':'Var_ShowVar','params':['$AXIS_ACT'],'id':3}\n".encode()
-            # print('krcrpc.py: ' + ">>>\t", message)
             self.socketclient.send(message)
             response_bytes = self.socketclient.recv(1024)
-            # print('krcrpc.py: ' + "<<<\t", response_bytes)
 
             # RESPONSE PARSING
             # convert bytes to str
@@ -161,7 +137,7 @@ class KRCRPC(threading.Thread):
 
             # Запись rob_axis_act в очередь
             self.axis_act_queue.queue[0] = rob_axis_act
-            # print(f'{rob_axis_act=}')
+            # self.logger.info(f"Robot axis: {rob_axis_act=}...")
 
         except Exception as error:
             self.logger.error(f"Не удалось получить данные из KRC RPC\n"
@@ -175,8 +151,7 @@ class KRCRPC(threading.Thread):
             self.socketclient.send(message)
             response_bytes = self.socketclient.recv(1024)
             if "Error HRESULT E_FAIL has been returned from a call to a COM component." in str(response_bytes):
-                # print(f'krcrpc.py: Error {response_bytes=}')
-                print(f'krcrpc.py: Error with {tag.name=}')
+                self.logger.info(f'krcrpc.py: Error with {tag.name=}')
                 return response_bytes
             else:
                 return response_bytes
@@ -187,12 +162,12 @@ class KRCRPC(threading.Thread):
     def setVar(self, tag):
         message = ("{'method':'Var_SetVar','params':['" + tag.name + "','" + str(tag.value) + "'],'id':3}\n").encode()
         response_bytes = self.sendMessage(message,tag)
-        # print('krcrpc.py: ' + "<<<\t", response_bytes)
+        # self.logger.info(f'sendMessage: {response_bytes=}')
 
     def getVar(self, tag):
         message = ("{'method':'Var_ShowVar','params':['" + tag.name + "'],'id':3}\n").encode()
         response_bytes = self.sendMessage(message,tag)
-        # print(f'krcrpc.py: {response_bytes=}')
+        # self.logger.info(f'sendMessage: {response_bytes=}')
 
         # RESPONSE PARSING
         # convert bytes to str
@@ -215,9 +190,5 @@ class KRCRPC(threading.Thread):
                 else:
                     # Read as string (Char, String)
                     tag.value = var_value.strip('"')
-                # if tag.value_type == 'Char':
-                #     tag.value = str(var_value)
-                # if tag.value_type.startswith('String'):
-                #     tag.value = str(var_value)
 
         return tag.value

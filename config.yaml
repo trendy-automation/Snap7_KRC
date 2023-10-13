@@ -1,21 +1,62 @@
 version: 2.0
+
 logger:
   level: INFO
   debug_file: 'debug.log'
   format: '%(asctime)-15s %(name)s %(message)s'
-plc:
-  ip: 192.168.99.81 # PLC SIM ip adress
-  db_num: 1 # DB1 Don't forget to turn off optimezed block access! Settings - attributes
-  reconnect_timeout: 60
-  refresh_time: 0.5
+
 krc_rpc:
   hostname: 'PCRC-2RL7HHTTRE' # OfficeLite PC's hostname
   port: 3333 # must be same as in appsettings.json (listen port KRC-RPC)
   authkey: 'TOP_SECRET_KEY' # must be same as in appsettings.json (auth key KRC-RPC)
   reconnect_timeout: 10
   refresh_time: 0.5
+
 robodk:
   robotname: 'KUKA KR 50 R2100' # Must be same as the robot's name in RoboDK station
   CNT: 10 # Also known as: CNT, APO/C_DIS, ZoneData, Blending radius, cornering
   speed: 1000 # Set linear speed in mm/s
   refresh_time: 0.5
+
+plc:
+  ip: 192.168.99.81 # PLC SIM ip adress
+  db_num: 1 # DB1 Don't forget to turn off optimezed block access! Settings - attributes
+  reconnect_timeout: 60
+  refresh_time: 0.5
+
+  data_io:
+    kuka_db_in: #KUKA Variables Example: DECL GLOBAL someStr_IN[1]
+      TOOL_NAME[1,]: ["", "String", 0, 0]
+      TOOL_NAME[1,1]: ["", "Char", 256, 0]
+      $ACT_TOOL: [0, "UInt", 258, 0]
+      $ACT_BASE: [0, "USInt", 260, 0]
+      someBool_IN: [False, "Bool", 261, 0]
+
+    kuka_db_out: #KUKA Variables
+      DEF_ADVANCE: [ 0, "UInt", 520, 0 ]
+      $ADVANCE: [ 0, "USInt", 522, 0 ]
+      someBool_OUT: [ False, "Bool", 523, 0 ]
+
+    rdk_db_out: #RoboDK IN signals
+      IO_1: [ False, "Bool", 526, 0 ]
+      IO_2: [ False, "Bool", 526, 1 ]
+      IO_3: [ False, "Bool", 526, 2 ]
+      IO_4: [ False, "Bool", 526, 3 ]
+      IO_5: [ False, "Bool", 526, 4 ]
+      IO_6: [ False, "Bool", 526, 5 ]
+      IO_7: [ False, "Bool", 526, 6 ]
+      IO_8: [ False, "Bool", 526, 7 ]
+      IO_9: [ False, "Bool", 527, 0 ]
+      IO_10: [ False, "Bool", 527, 1 ]
+
+    rdk_db_in: #RoboDK OUT signals
+      IO_11: [ False, "Bool", 524, 0 ]
+      IO_12: [ False, "Bool", 524, 1 ]
+      IO_13: [ False, "Bool", 524, 2 ]
+      IO_14: [ False, "Bool", 524, 3 ]
+      IO_15: [ False, "Bool", 524, 4 ]
+      IO_16: [ False, "Bool", 524, 5 ]
+      IO_17: [ False, "Bool", 524, 6 ]
+      IO_18: [ False, "Bool", 524, 7 ]
+      IO_19: [ False, "Bool", 525, 0 ]
+      IO_20: [ False, "Bool", 525, 1 ]

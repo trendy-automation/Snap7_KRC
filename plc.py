@@ -8,6 +8,7 @@ import time
 import copy
 from data_io import Data_IO, Tag
 
+
 class PLC(threading.Thread):
     def __init__(self, plc_config):
         print("plc.py")
@@ -31,50 +32,16 @@ class PLC(threading.Thread):
         self.outputs_queue = Queue()
 
         # KUKA IN SIGNALS
-        self.kuka_db_in = Data_IO({
-            "TOOL_NAME[1,]": ["", "String", 0, 0],
-            "TOOL_NAME[1,1]": ["", "Char", 256, 0],
-            "$ACT_TOOL": [0, "UInt", 258, 0],
-            "$ACT_BASE": [0, "USInt", 260, 0],
-            "someBool_IN": [False, "Bool", 261, 0],
-        })
+        self.kuka_db_in = Data_IO(plc_config['data_io']['kuka_db_in'])
 
         # KUKA OUT SIGNALS
-        self.kuka_db_out = Data_IO({
-            # "someStr_IN": [" ", "String", 262, 0],
-            # "someStr_OUT": [" ", "Char", 518, 0],
-            "DEF_ADVANCE": [0, "UInt", 520, 0],
-            "$ADVANCE": [0, "USInt", 522, 0],
-            "someBool_OUT": [False, "Bool", 523, 0],
-        })
+        self.kuka_db_out = Data_IO(plc_config['data_io']['kuka_db_out'])
 
         # RDK IN SIGNALS
-        self.rdk_db_out = Data_IO({
-            "IO_1": [False, "Bool", 526, 0],
-            "IO_2": [False, "Bool", 526, 1],
-            "IO_3": [False, "Bool", 526, 2],
-            "IO_4": [False, "Bool", 526, 3],
-            "IO_5": [False, "Bool", 526, 4],
-            "IO_6": [False, "Bool", 526, 5],
-            "IO_7": [False, "Bool", 526, 6],
-            "IO_8": [False, "Bool", 526, 7],
-            "IO_9": [False, "Bool", 527, 0],
-            "IO_10": [False, "Bool", 527, 1]
-        })
+        self.rdk_db_out = Data_IO(plc_config['data_io']['rdk_db_out'])
 
         # RDK OUT SIGNALS
-        self.rdk_db_in = Data_IO({
-            "IO_11": [False, "Bool", 524, 0],
-            "IO_12": [False, "Bool", 524, 1],
-            "IO_13": [False, "Bool", 524, 2],
-            "IO_14": [False, "Bool", 524, 3],
-            "IO_15": [False, "Bool", 524, 4],
-            "IO_16": [False, "Bool", 524, 5],
-            "IO_17": [False, "Bool", 524, 6],
-            "IO_18": [False, "Bool", 524, 7],
-            "IO_19": [False, "Bool", 525, 0],
-            "IO_20": [False, "Bool", 525, 1],
-        })
+        self.rdk_db_in = Data_IO(plc_config['data_io']['rdk_db_in'])
 
         # Добавление в очередь
         self.inputs_queue.put(dict(kuka_inputs=copy.deepcopy(self.kuka_db_in),
@@ -244,7 +211,7 @@ class PLC(threading.Thread):
             kuka_inputs = inputs['kuka_inputs']
             rdk_inputs = inputs['rdk_inputs']
 
-            # Сравнение предыдущих значений выходов с текущими (не тратим время на перезапись)
+            # Сравнение предыдущих значений с текущими (не тратим время на перезапись)
             if self.kuka_db_in != kuka_inputs:
                 self.set_signals(kuka_inputs)
                 self.kuka_db_in = copy.deepcopy(kuka_inputs)
