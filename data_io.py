@@ -9,8 +9,8 @@ class Data_IO(dict):
     def set(self, key, value):
         self.__dict__[key].value = value
 
-    #def __iter__(self):
-    #    return iter(self.__dict__.items())
+    def __iter__(self):
+        return iter(self.__dict__.values())
 
 class Tag:
     def __init__(self, value, value_type: str, offsetbyte: int, offsetbit: int, name: str):
@@ -19,3 +19,11 @@ class Tag:
         self.offsetbyte = offsetbyte
         self.offsetbit = offsetbit
         self.name = name
+    def __set__(self, instance, value):
+        if isinstance(value, Tag):
+            self.value = value.value
+        else:
+            instance.value = value
+
+    # def __get__(self, instance, owner):
+    #     return instance.value

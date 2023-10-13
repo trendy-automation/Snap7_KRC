@@ -95,6 +95,28 @@ class PLC(threading.Thread):
             "DInt": 4
         }
 
+        self.get_signals(self.kuka_db_out)
+        self.get_signals(self.rdk_db_out)
+
+        self.set_signals(self.kuka_db_in)
+        self.set_signals(self.kuka_db_in)
+
+    def get_db_value_test(self, tag: Tag) -> Tag:
+        tag.value = None
+        if tag.value_type == 'Bool':
+            tag.value = True
+        if tag.value_type == "USInt":
+            tag.value = 12
+        if "Int" in tag.value_type and tag.value_type in self.massa:
+            tag.value = 123
+        if tag.value_type == 'Char':
+            tag.value = 'X'
+        if tag.value_type.startswith('String'):
+            tag.value = 'Hello'
+        return tag
+    def set_db_value_test(self, tag: Tag) -> int:
+        return 0
+
     def get_bool(self, tag: Tag) -> int:
         tag_data = self.snap7client.db_read(self.db_num, tag.offsetbyte, 1)
         return snap7.util.get_bool(tag_data, 0, tag.offsetbit)
@@ -120,17 +142,18 @@ class PLC(threading.Thread):
         return snap7.util.get_string(byte_array_read, 0)
 
     def get_db_value(self, tag: Tag) -> Tag:
+        tag.value = None
         if tag.value_type == 'Bool':
-            return [self.get_bool(self.db_num, tag.offsetbyte, tag.offsetbit), tag.value_type, tag.offsetbyte, tag.offsetbit]
+            tag.value = self.get_bool(tag)
         if tag.value_type == "USInt":
-            return [self.get_usint(self.db_num, tag.offsetbyte), tag.value_type, tag.offsetbyte, tag.offsetbit]
+            tag.value = self.get_usint(tag)
         if "Int" in tag.value_type and tag.value_type in self.massa:
-            return [self.get_int(self.db_num, tag.offsetbyte, tag.value_type), tag.value_type, tag.offsetbyte, tag.offsetbit]
+            tag.value = self.get_int(tag)
         if tag.value_type == 'Char':
-            return [self.get_char(self.db_num, tag.offsetbyte), tag.value_type, tag.offsetbyte, tag.offsetbit]
+            tag.value = self.get_char(tag)
         if tag.value_type.startswith('String'):
-            return [self.get_string(self.db_num, tag.offsetbyte, tag.value_type), tag.value_type, tag.offsetbyte, tag.offsetbit]
-        return None
+            tag.value = self.get_string(tag)
+        return tag
 
     def set_bool(self, tag: Tag) -> int:
         tag_data = self.snap7client.db_read(self.db_num, tag.offsetbyte, 1)
@@ -170,24 +193,27 @@ class PLC(threading.Thread):
 
     def set_db_value(self, tag: Tag) -> int:
         if tag.value_type == 'Bool':
-            return self.set_bool(self.db_num, tag.offsetbyte, tag.offsetbit, tag.tag_value)
+            return self.set_bool(tag)
         if tag.value_type == "USInt":
-            return self.set_usint(self.db_num, tag.offsetbyte, tag.tag_value)
+            return self.set_usint(tag)
         if "Int" in tag.value_type and tag.value_type in self.massa:
-            return self.set_int(self.db_num, tag.offsetbyte, tag.tag_value, tag.value_type)
+            return self.set_int(tag)
         if tag.value_type == 'Char':
-            return self.set_char(self.db_num, tag.offsetbyte, tag.tag_value)
+            return self.set_char(tag)
         if tag.value_type.startswith('String'):
-            return self.set_string(self.db_num, tag.offsetbyte, tag.tag_value, tag.value_type)
+            return self.set_string(tag)
         return 0
 
     def set_signals(self, db: Data_IO):
-        for output_signal_name, output_signal in db:
-            self.set_db_value(output_signal)
+        for output_signal in db:
+            self.set_db_value_test(output_signal)
+            print(f'{output_signal.value=}')
 
     def get_signals(self, db: Data_IO):
-        for input_signal_name, input_signal in db:
-            db.set(input_signal_name, self.get_db_value(input_signal))
+        for input_signal in db:
+            input_signal = self.get_db_value_test(input_signal)
+        for input_signal in db:
+            print(f'{input_signal.value=}')
 
     def run(self):
         self.logger.info(f"Connection with PLC {self.plc_ip} started")
