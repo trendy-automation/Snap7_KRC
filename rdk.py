@@ -56,7 +56,7 @@ class RDK(threading.Thread):
             rdk_outputs = self.outputs_queue.queue[0]['rdk_outputs']
             #print(f'rdk.py: {rdk_outputs=}')
             for output_signal in rdk_outputs:
-                print(f'rdk.py: {output_signal.name=} {rdk_outputs.get(output_signal.name)=}')
+                #print(f'rdk.py: {output_signal.name=} {rdk_outputs.get(output_signal.name)=}')
                 RDK.setParam(output_signal.name, int(output_signal.value))
                 # RDK.setParam('IO_1', 'True')
 
