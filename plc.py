@@ -4,7 +4,6 @@ import traceback
 import threading
 import numpy as np  # pip install numpy
 from queue import Queue
-from data_io import Data_IO
 import time
 import copy
 from data_io import Data_IO, Tag
@@ -42,39 +41,39 @@ class PLC(threading.Thread):
 
         # KUKA OUT SIGNALS
         self.kuka_db_out = Data_IO({
-            "someString": ["", "String", 0, 0],
-            "someChar": ["", "Char", 256, 0],
-            "someUInt": [0, "UInt", 258, 0],
-            "someUSInt": [0, "USInt", 260, 0],
-            "someBool": [False, "Bool", 261, 0],
-        })
-
-        # RDK OUT SIGNALS
-        self.rdk_db_out = Data_IO({
-            "IO_1": [False, "Bool", 264, 0],
-            "IO_2": [False, "Bool", 264, 1],
-            "IO_3": [False, "Bool", 264, 2],
-            "IO_4": [False, "Bool", 264, 3],
-            "IO_5": [False, "Bool", 264, 4],
-            "IO_6": [False, "Bool", 264, 5],
-            "IO_7": [False, "Bool", 264, 6],
-            "IO_8": [False, "Bool", 264, 7],
-            "IO_9": [False, "Bool", 265, 0],
-            "IO_10": [False, "Bool", 265, 1]
+            "someString": ["", "String", 262, 0],
+            "someChar": ["", "Char", 518, 0],
+            "someUInt": [0, "UInt", 520, 0],
+            "someUSInt": [0, "USInt", 522, 0],
+            "someBool": [False, "Bool", 523, 0],
         })
 
         # RDK IN SIGNALS
+        self.rdk_db_out = Data_IO({
+            "IO_1": [False, "Bool", 526, 0],
+            "IO_2": [False, "Bool", 526, 1],
+            "IO_3": [False, "Bool", 526, 2],
+            "IO_4": [False, "Bool", 526, 3],
+            "IO_5": [False, "Bool", 526, 4],
+            "IO_6": [False, "Bool", 526, 5],
+            "IO_7": [False, "Bool", 526, 6],
+            "IO_8": [False, "Bool", 526, 7],
+            "IO_9": [False, "Bool", 527, 0],
+            "IO_10": [False, "Bool", 527, 1]
+        })
+
+        # RDK OUT SIGNALS
         self.rdk_db_in = Data_IO({
-            "IO_11": [False, "Bool", 262, 0],
-            "IO_12": [False, "Bool", 262, 1],
-            "IO_13": [False, "Bool", 262, 2],
-            "IO_14": [False, "Bool", 262, 3],
-            "IO_15": [False, "Bool", 262, 4],
-            "IO_16": [False, "Bool", 262, 5],
-            "IO_17": [False, "Bool", 262, 6],
-            "IO_18": [False, "Bool", 262, 7],
-            "IO_19": [False, "Bool", 263, 0],
-            "IO_20": [False, "Bool", 263, 1],
+            "IO_11": [False, "Bool", 524, 0],
+            "IO_12": [False, "Bool", 524, 1],
+            "IO_13": [False, "Bool", 524, 2],
+            "IO_14": [False, "Bool", 524, 3],
+            "IO_15": [False, "Bool", 524, 4],
+            "IO_16": [False, "Bool", 524, 5],
+            "IO_17": [False, "Bool", 524, 6],
+            "IO_18": [False, "Bool", 524, 7],
+            "IO_19": [False, "Bool", 525, 0],
+            "IO_20": [False, "Bool", 525, 1],
         })
 
         # Добавление в очередь
@@ -167,7 +166,7 @@ class PLC(threading.Thread):
         tag_data = bytearray(len_arr + 2)
         snap7.util.set_string(tag_data, 0, tag.tag_value, len_arr)
         tag_data[0] = np.uint8(len_arr)  # np.uint8(len(tag_data)-2)
-        tag_data[1] = np.uint8(len(tag.tag_value))      
+        tag_data[1] = np.uint8(len(tag.tag_value))
         return self.snap7client.db_write(self.db_num, tag.offsetbyte, tag_data)
 
     def set_db_value(self, tag: Tag) -> int:

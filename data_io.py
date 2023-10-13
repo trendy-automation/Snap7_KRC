@@ -9,9 +9,6 @@ class Data_IO(dict):
     def set(self, key, value):
         self.__dict__[key].value = value
 
-    def __iter__(self):
-        return iter(self.__dict__.values())
-
 class Tag:
     def __init__(self, value, value_type: str, offsetbyte: int, offsetbit: int, name: str):
         self.value = value
