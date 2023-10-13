@@ -6,6 +6,7 @@ import time
 import json
 import re
 from queue import Queue
+#from obj import Obj
 
 
 class KRCRPC(threading.Thread):
