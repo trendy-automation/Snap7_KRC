@@ -8,6 +8,7 @@ import time
 import copy
 from data_io import Data_IO, Tag
 
+
 class PLC(threading.Thread):
     def __init__(self, plc_config):
         print("plc.py")
@@ -31,50 +32,16 @@ class PLC(threading.Thread):
         self.outputs_queue = Queue()
 
         # KUKA IN SIGNALS
-        self.kuka_db_in = Data_IO({
-            "someString": ["", "String", 0, 0],
-            "someChar": ["", "Char", 256, 0],
-            "someUInt": [0, "UInt", 258, 0],
-            "someUSInt": [0, "USInt", 260, 0],
-            "someBool": [False, "Bool", 261, 0],
-        })
+        self.kuka_db_in = Data_IO(plc_config['data_io']['kuka_db_in'])
 
         # KUKA OUT SIGNALS
-        self.kuka_db_out = Data_IO({
-            "someString": ["", "String", 262, 0],
-            "someChar": ["", "Char", 518, 0],
-            "someUInt": [0, "UInt", 520, 0],
-            "someUSInt": [0, "USInt", 522, 0],
-            "someBool": [False, "Bool", 523, 0],
-        })
+        self.kuka_db_out = Data_IO(plc_config['data_io']['kuka_db_out'])
 
         # RDK IN SIGNALS
-        self.rdk_db_out = Data_IO({
-            "IO_1": [False, "Bool", 526, 0],
-            "IO_2": [False, "Bool", 526, 1],
-            "IO_3": [False, "Bool", 526, 2],
-            "IO_4": [False, "Bool", 526, 3],
-            "IO_5": [False, "Bool", 526, 4],
-            "IO_6": [False, "Bool", 526, 5],
-            "IO_7": [False, "Bool", 526, 6],
-            "IO_8": [False, "Bool", 526, 7],
-            "IO_9": [False, "Bool", 527, 0],
-            "IO_10": [False, "Bool", 527, 1]
-        })
+        self.rdk_db_out = Data_IO(plc_config['data_io']['rdk_db_out'])
 
         # RDK OUT SIGNALS
-        self.rdk_db_in = Data_IO({
-            "IO_11": [False, "Bool", 524, 0],
-            "IO_12": [False, "Bool", 524, 1],
-            "IO_13": [False, "Bool", 524, 2],
-            "IO_14": [False, "Bool", 524, 3],
-            "IO_15": [False, "Bool", 524, 4],
-            "IO_16": [False, "Bool", 524, 5],
-            "IO_17": [False, "Bool", 524, 6],
-            "IO_18": [False, "Bool", 524, 7],
-            "IO_19": [False, "Bool", 525, 0],
-            "IO_20": [False, "Bool", 525, 1],
-        })
+        self.rdk_db_in = Data_IO(plc_config['data_io']['rdk_db_in'])
 
         # Добавление в очередь
         self.inputs_queue.put(dict(kuka_inputs=copy.deepcopy(self.kuka_db_in),
@@ -123,35 +90,34 @@ class PLC(threading.Thread):
         tag.value = None
         if tag.value_type == 'Bool':
             tag.value = self.get_bool(tag)
-        if tag.value_type == "USInt":
+        elif tag.value_type == "USInt":
             tag.value = self.get_usint(tag)
-        if "Int" in tag.value_type and tag.value_type in self.massa:
+        elif "Int" in tag.value_type and tag.value_type in self.massa:
             tag.value = self.get_int(tag)
-        if tag.value_type == 'Char':
+        elif tag.value_type == 'Char':
             tag.value = self.get_char(tag)
-        if tag.value_type.startswith('String'):
+        elif tag.value_type.startswith('String'):
             tag.value = self.get_string(tag)
         return tag
 
     def set_bool(self, tag: Tag) -> int:
         tag_data = self.snap7client.db_read(self.db_num, tag.offsetbyte, 1)
-        snap7.util.set_bool(tag_data, 0, tag.offsetbit, bool(tag.tag_value))
+        snap7.util.set_bool(tag_data, 0, tag.offsetbit, bool(tag.value))
         return self.snap7client.db_write(self.db_num, tag.offsetbyte, tag_data)
 
     def set_real(self, tag: Tag) -> int:
         tag_data = bytearray(4)
-        snap7.util.set_real(tag_data, 0, tag.tag_value)
+        snap7.util.set_real(tag_data, 0, tag.value)
         return self.snap7client.db_write(self.db_num, tag.offsetbyte, tag_data)
 
     def set_usint(self, tag: Tag) -> int:
         tag_data = bytearray(1)
-        snap7.util.set_usint(tag_data, 0, tag.tag_value)
+        snap7.util.set_usint(tag_data, 0, tag.value)
         return self.snap7client.db_write(self.db_num, tag.offsetbyte, tag_data)
 
     def set_int(self, tag) -> int:
         tag_data = bytearray(self.massa[tag.value_type])
-        assert tag.value_type[1] != 'U' or tag.tag_value >= 0, f"Запись отрицательного значения в тип {tag.value_type}"
-        snap7.util.set_int(tag_data, 0, tag.tag_value)
+        snap7.util.set_int(tag_data, 0, tag.value)
         return self.snap7client.db_write(self.db_num, tag.offsetbyte, tag_data)
 
     def set_char(self, tag: Tag) -> int:
@@ -162,14 +128,16 @@ class PLC(threading.Thread):
 
     def set_string(self, tag) -> int:
         len_arr = 254 if tag.value_type == 'String' else tag.value_type[7:-1]
-        tag.tag_value = f"%.{len_arr}s" % tag.tag_value
+        # print(f'{tag.value_type=} , {len_arr=}')
+        tag.value = f"%.{len_arr}s" % tag.value
         tag_data = bytearray(len_arr + 2)
-        snap7.util.set_string(tag_data, 0, tag.tag_value, len_arr)
+        snap7.util.set_string(tag_data, 0, tag.value, len_arr)
         tag_data[0] = np.uint8(len_arr)  # np.uint8(len(tag_data)-2)
-        tag_data[1] = np.uint8(len(tag.tag_value))
+        tag_data[1] = np.uint8(len(tag.value))
         return self.snap7client.db_write(self.db_num, tag.offsetbyte, tag_data)
 
     def set_db_value(self, tag: Tag) -> int:
+        assert tag.value_type[0] != 'U' or tag.value >= 0, f"Запись отрицательного значения в тип {tag.value_type}"
         if tag.value_type == 'Bool':
             return self.set_bool(tag)
         if tag.value_type == "USInt":
@@ -243,7 +211,7 @@ class PLC(threading.Thread):
             kuka_inputs = inputs['kuka_inputs']
             rdk_inputs = inputs['rdk_inputs']
 
-            # Сравнение предыдущих значений выходов с текущими (не тратим время на перезапись)
+            # Сравнение предыдущих значений с текущими (не тратим время на перезапись)
             if self.kuka_db_in != kuka_inputs:
                 self.set_signals(kuka_inputs)
                 self.kuka_db_in = copy.deepcopy(kuka_inputs)

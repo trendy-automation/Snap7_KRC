@@ -4,7 +4,6 @@ from rdk import RDK
 import yaml  # pip install PyYAML
 import os
 import sys
-#from queue import Queue
 import logging
 from logging import handlers
 
@@ -17,6 +16,7 @@ def start_logging(logger_level, logger_debug_file, logger_format):
                                                                        backupCount=7)],
                         format=logger_format)
 
+
 if __name__ == '__main__':
     csd = os.path.dirname(os.path.abspath(__file__))
     config = yaml.safe_load(open(csd + "/config.yaml"))
@@ -26,7 +26,6 @@ if __name__ == '__main__':
     logger_format = config['logger']['format']
 
     start_logging(logger_level, logger_debug_file, logger_format)
-
 
     # PLC thread
     plc_config = config['plc']

@@ -1,7 +1,5 @@
 import threading
 from robodk.robolink import *  # API to communicate with RoboDK
-#from queue import Queue
-#from obj import Obj
 import logging
 
 
@@ -38,7 +36,8 @@ class RDK(threading.Thread):
         # It is important to provide the reference frame and the tool frames when generating programs offline
         robot.setPoseFrame(robot.PoseFrame())
         robot.setPoseTool(robot.PoseTool())
-        robot.setRounding(self.cnt)  # Set the rounding parameter (Also known as: CNT, APO/C_DIS, ZoneData, Blending radius, cornering, ...)
+        # Set the rounding parameter (Also known as: CNT, APO/C_DIS, ZoneData, Blending radius, cornering, ...)
+        robot.setRounding(self.cnt)
         robot.setSpeed(self.speed)  # Set linear speed in mm/s
 
         self.logger.info(f"CNT {self.cnt}")
@@ -46,23 +45,25 @@ class RDK(threading.Thread):
 
         # Communication with controller (OfficeLite)
         while True:
+
             # rob_axis_act записывается в очередь в krcrpc.py
             robot.setJoints(self.axis_act_queue.queue[0])
 
-            # Чтение входов OL и RoboDK из очереди
+            # Чтение входов OL из очереди
             kuka_inputs = self.inputs_queue.queue[0]['kuka_inputs']
 
-            # Write values to RDK
+            # Чтение выходов RoboDK из очереди
             rdk_outputs = self.outputs_queue.queue[0]['rdk_outputs']
+
             for output_signal in rdk_outputs:
-                # print('rdk.py: ' + f'{output_signal_name=} {rdk_outputs.get(output_signal_name)=}')
+                # self.logger.info(f'RDK input signals: {output_signal.name=} {rdk_outputs.get(output_signal.name)=}')
                 RDK.setParam(output_signal.name, int(output_signal.value))
                 # RDK.setParam('IO_1', 'True')
 
             # Read values from RDK
             rdk_inputs = self.inputs_queue.queue[0]['rdk_inputs']
             for input_signal in rdk_inputs:
-                # print('rdk.py: ' + f'{rdk_inputs.get(input_signal_name)=}')
+                # self.logger.info(f'RDK output signals: {rdk_inputs.get(input_signal.name)=}')
                 if input_signal.value_type == 'Bool':
                     input_signal.value = bool(RDK.getParam(input_signal.name))
                 else:
