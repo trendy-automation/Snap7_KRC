@@ -111,21 +111,20 @@ class KRCRPC(threading.Thread):
 
             # Write values to OfficeLite
             # for output_signal in kuka_outputs:
-            #     OL.setParam(output_signal.name, int(output_signal.value))
+            #     OL.setVar(output_signal.name, int(output_signal.value))
 
             # Read values from OfficeLite
             # for input_signal in kuka_inputs:
-            #     input_signal.value = OL.getParam(input_signal.name)
+            #     input_signal.value = OL.getVar(input_signal.name)
 
             # Write BOOL OfficeLite --> DB [261] //DECL GLOBAL BOOL someBool_OUT = FALSE
             if "someBool" in kuka_inputs.keys():
-                kuka_inputs.someBool = self.Bool_ShowVar('someBool_OUT')
-                self.logger.info(f"someBool_OUT OL --> DB {kuka_inputs.someBool=}...")
-
+                kuka_inputs.someBool.value = self.Bool_ShowVar('someBool_OUT')
+                #self.logger.info(f"someBool_OUT OL --> DB {kuka_inputs.someBool.value=}...")
             # Write BOOL DB ->> OfficeLite [527] //DECL GLOBAL BOOL someBool_IN = FALSE
             if "someBool" in kuka_outputs.keys():
-                self.Bool_SetVar('someBool_IN', str(kuka_outputs.someBool[0]))
-                self.logger.info(f"someBool_IN DB --> OL {kuka_outputs.someBool=}...")
+                self.Bool_SetVar('someBool_IN', str(kuka_outputs.someBool.value))
+                #self.logger.info(f"someBool_IN DB --> OL {kuka_outputs.someBool.value=}...")
 
             self.inputs_queue.queue[0] = dict(kuka_inputs=kuka_inputs, rdk_inputs=rdk_inputs)
 

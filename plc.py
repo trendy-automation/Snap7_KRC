@@ -95,6 +95,11 @@ class PLC(threading.Thread):
             "DInt": 4
         }
 
+        print(f'{self.kuka_db_in=}')
+        print(f'{self.kuka_db_out=}')
+        print(f'{self.rdk_db_in=}')
+        print(f'{self.rdk_db_out=}')
+
     def get_bool(self, tag: Tag) -> int:
         tag_data = self.snap7client.db_read(self.db_num, tag.offsetbyte, 1)
         return snap7.util.get_bool(tag_data, 0, tag.offsetbit)

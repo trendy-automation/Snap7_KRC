@@ -54,15 +54,16 @@ class RDK(threading.Thread):
 
             # Write values to RDK
             rdk_outputs = self.outputs_queue.queue[0]['rdk_outputs']
+            #print(f'rdk.py: {rdk_outputs=}')
             for output_signal in rdk_outputs:
-                # print('rdk.py: ' + f'{output_signal_name=} {rdk_outputs.get(output_signal_name)=}')
+                print(f'rdk.py: {output_signal.name=} {rdk_outputs.get(output_signal.name)=}')
                 RDK.setParam(output_signal.name, int(output_signal.value))
                 # RDK.setParam('IO_1', 'True')
 
             # Read values from RDK
             rdk_inputs = self.inputs_queue.queue[0]['rdk_inputs']
             for input_signal in rdk_inputs:
-                # print('rdk.py: ' + f'{rdk_inputs.get(input_signal_name)=}')
+                # print(f'rdk.py: {rdk_inputs.get(input_signal.name)=}')
                 if input_signal.value_type == 'Bool':
                     input_signal.value = bool(RDK.getParam(input_signal.name))
                 else:
