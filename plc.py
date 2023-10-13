@@ -96,28 +96,6 @@ class PLC(threading.Thread):
             "DInt": 4
         }
 
-        self.get_signals(self.kuka_db_out)
-        self.get_signals(self.rdk_db_out)
-
-        self.set_signals(self.kuka_db_in)
-        self.set_signals(self.kuka_db_in)
-
-    def get_db_value_test(self, tag: Tag) -> Tag:
-        tag.value = None
-        if tag.value_type == 'Bool':
-            tag.value = True
-        if tag.value_type == "USInt":
-            tag.value = 12
-        if "Int" in tag.value_type and tag.value_type in self.massa:
-            tag.value = 123
-        if tag.value_type == 'Char':
-            tag.value = 'X'
-        if tag.value_type.startswith('String'):
-            tag.value = 'Hello'
-        return tag
-    def set_db_value_test(self, tag: Tag) -> int:
-        return 0
-
     def get_bool(self, tag: Tag) -> int:
         tag_data = self.snap7client.db_read(self.db_num, tag.offsetbyte, 1)
         return snap7.util.get_bool(tag_data, 0, tag.offsetbit)
@@ -207,14 +185,11 @@ class PLC(threading.Thread):
 
     def set_signals(self, db: Data_IO):
         for output_signal in db:
-            self.set_db_value_test(output_signal)
-            print(f'{output_signal.value=}')
+            self.set_db_value(output_signal)
 
     def get_signals(self, db: Data_IO):
         for input_signal in db:
-            input_signal = self.get_db_value_test(input_signal)
-        for input_signal in db:
-            print(f'{input_signal.value=}')
+            input_signal = self.get_db_value(input_signal)
 
     def run(self):
         self.logger.info(f"Connection with PLC {self.plc_ip} started")

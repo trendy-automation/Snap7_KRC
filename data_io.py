@@ -19,11 +19,3 @@ class Tag:
         self.offsetbyte = offsetbyte
         self.offsetbit = offsetbit
         self.name = name
-    def __set__(self, instance, value):
-        if isinstance(value, Tag):
-            self.value = value.value
-        else:
-            instance.value = value
-
-    # def __get__(self, instance, owner):
-    #     return instance.value
