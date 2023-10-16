@@ -1,5 +1,5 @@
 import threading
-from robodk.robolink import *  # API to communicate with RoboDK
+from robodk.robolink import *  # pip install robodk
 import logging
 
 

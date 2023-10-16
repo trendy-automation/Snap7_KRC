@@ -4,17 +4,16 @@ Python wrapper for the snap7 PLC communication library - [GitHub](https://github
 
 Supported data types: String, Char, UInt, USint, Bool.
 
-Packages:
-python-snap7 #pip install python-snap7
-numpy #pip install numpy
-PyYAML #pip install PyYAML
+Используемые основные пакеты:
+python-snap7    # pip install python-snap7
+robodk 5.6.4    # pip install robodk
 
 ### Инструкция
 
-1. Создать DB для переменных, добавить переменные поддерживаемого типа.
+1. Создать DB для переменных, добавить переменные поддерживаемого типа для KUKA и RoboDK.
 2. В аттрибутах DB отлючить оптимизацию (Optimized block access).
-3. В config.yaml прописать IP контроллера и номер блока DB. 
-4. В plc.py - *init* прописать переменные с корректными сдвигами (Offset) как в DB.
-5. В plc.py - *process_io* добавить переменные для чтения и записи.
-6. Запустить main.py.
-7. Profit!
+3. Заполнить config.yaml, в data_io прописать корректные сдвиги (offsets) как в DB. 
+4. Запустить RoboDK, PLC SIM и OfficeLite. В OfficeLite запустить KRC-RPC.
+5. Запустить main.py.
+
+![Alt text](image.png)

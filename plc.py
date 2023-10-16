@@ -90,6 +90,8 @@ class PLC(threading.Thread):
         tag.value = None
         if tag.value_type == 'Bool':
             tag.value = self.get_bool(tag)
+        elif tag.value_type == "Real":
+            tag.value = self.get_real(tag)
         elif tag.value_type == "USInt":
             tag.value = self.get_usint(tag)
         elif "Int" in tag.value_type and tag.value_type in self.massa:
@@ -140,6 +142,8 @@ class PLC(threading.Thread):
         assert tag.value_type[0] != 'U' or tag.value >= 0, f"Запись отрицательного значения в тип {tag.value_type}"
         if tag.value_type == 'Bool':
             return self.set_bool(tag)
+        if tag.value_type == "Real":
+            return self.set_real(tag)
         if tag.value_type == "USInt":
             return self.set_usint(tag)
         if "Int" in tag.value_type and tag.value_type in self.massa:

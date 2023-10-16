@@ -10,19 +10,19 @@ krc_rpc:
   port: 3333 # must be same as in appsettings.json (listen port KRC-RPC)
   authkey: 'TOP_SECRET_KEY' # must be same as in appsettings.json (auth key KRC-RPC)
   reconnect_timeout: 10
-  refresh_time: 0.5
+  refresh_time: 0.0
 
 robodk:
   robotname: 'KUKA KR 50 R2100' # Must be same as the robot's name in RoboDK station
   CNT: 10 # Also known as: CNT, APO/C_DIS, ZoneData, Blending radius, cornering
   speed: 1000 # Set linear speed in mm/s
-  refresh_time: 0.5
+  refresh_time: 0.0
 
 plc:
   ip: 192.168.99.81 # PLC SIM ip adress
   db_num: 1 # DB1 Don't forget to turn off optimezed block access! Settings - attributes
   reconnect_timeout: 60
-  refresh_time: 0.5
+  refresh_time: 0.0
 
   data_io:
     kuka_db_in: #KUKA Variables Example: DECL GLOBAL someStr_IN[1]
@@ -30,12 +30,47 @@ plc:
       TOOL_NAME[1,1]: ["", "Char", 256, 0]
       $ACT_TOOL: [0, "UInt", 258, 0]
       $ACT_BASE: [0, "USInt", 260, 0]
-      someBool_IN: [False, "Bool", 261, 0]
+
+      #ext auto KUKA 2 PLC
+      #LifeBit: [False, "Bool", 528, 0]
+      $RC_RDY1: [False, "Bool", 528, 1]
+      $I_O_ACTCONF: [False, "Bool", 528, 2]
+      $PRO_ACT: [False, "Bool", 528, 3]
+      $PRO_MOVE: [False, "Bool", 528, 4]
+      #NOT_ALARM_STOP: [False, "Bool", 528, 5]
+      #$EXT_FIRST_START: [False, "Bool", 528, 6]
+      $STOPMESS: [False, "Bool", 528, 7]
+      $USER_SAF: [False, "Bool", 529, 0]
+      $PERI_RDY: [False, "Bool", 529, 1]
+      #ERROR: [False, "Bool", 529, 2]
+      #EXT_ACTIVE: [False, "Bool", 529, 3]
+      $IN_HOME: [False, "Bool", 529, 4]
+      $ROB_CAL: [False, "Bool", 529, 5]
+      #PGNO_REQ: [False, "Bool", 529, 6]
+      #APPL_RUN: [False, "Bool", 529, 7]
+      #PGNO_REFL: [False, "Bool", 530, 0]
+
+      $TORQUE_AXIS_ACT[1]: [0, "Real", 536, 0]
+      $TORQUE_AXIS_ACT[2]: [0, "Real", 540, 0]
+      $TORQUE_AXIS_ACT[3]: [0, "Real", 544, 0]
+      $TORQUE_AXIS_ACT[4]: [0, "Real", 548, 0]
+      $TORQUE_AXIS_ACT[5]: [0, "Real", 552, 0]
+      $TORQUE_AXIS_ACT[6]: [0, "Real", 556, 0]
 
     kuka_db_out: #KUKA Variables
       DEF_ADVANCE: [ 0, "UInt", 520, 0 ]
       $ADVANCE: [ 0, "USInt", 522, 0 ]
-      someBool_OUT: [ False, "Bool", 523, 0 ]
+
+      #ext auto PLC 2 KUKA
+      #To_KUKA_Reserve_1: [False, "Bool", 532, 0]
+      #$DRIVERS_ON: [False, "Bool", 532, 1] # not working with OL
+      #$EXT_START: [False, "Bool", 532, 2] # not working with OL
+      #$MOVE_ENABLE: [False, "Bool", 532, 3] # not working with OL
+      #$CONF_MESS: [False, "Bool", 532, 4] # not working with OL
+      #To_KUKA_Reserve_2: [False, "Bool", 532, 5]
+      #To_KUKA_Reserve_3: [False, "Bool", 532, 6]
+      #PGNO_VALID: [False, "Bool", 532, 7] # not working with OL
+      #PGNO: [False, "Bool", 534, 0] # not working with OL
 
     rdk_db_out: #RoboDK IN signals
       IO_1: [ False, "Bool", 526, 0 ]

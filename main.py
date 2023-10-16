@@ -43,9 +43,9 @@ if __name__ == '__main__':
     axis_act_queue = krc_rpc.axis_act_queue
 
     # RoboDK thread
-    rdk_config = config['robodk']
-    rdk_config['inputs_queue'] = my_plc.inputs_queue
-    rdk_config['outputs_queue'] = my_plc.outputs_queue
-    rdk_config['axis_act_queue'] = krc_rpc.axis_act_queue
-    rdk = RDK(rdk_config)
-    rdk.start()
+    # rdk_config = config['robodk']
+    # rdk_config['inputs_queue'] = my_plc.inputs_queue
+    # rdk_config['outputs_queue'] = my_plc.outputs_queue
+    # rdk_config['axis_act_queue'] = krc_rpc.axis_act_queue
+    # rdk = RDK(rdk_config)
+    # rdk.start()
