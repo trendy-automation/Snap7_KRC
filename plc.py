@@ -212,14 +212,16 @@ class PLC(threading.Thread):
                                                rdk_outputs=copy.deepcopy(self.rdk_db_out))
 
             inputs = self.inputs_queue.queue[0]
-            kuka_inputs = inputs['kuka_inputs']
-            rdk_inputs = inputs['rdk_inputs']
+            # self.logger.info(f': {self.kuka_db_out=}')
+            # self.logger.info(f': {self.rdk_db_out=}')
 
             # Сравнение предыдущих значений с текущими (не тратим время на перезапись)
+            kuka_inputs = inputs['kuka_inputs']
             if self.kuka_db_in != kuka_inputs:
                 self.set_signals(kuka_inputs)
                 self.kuka_db_in = copy.deepcopy(kuka_inputs)
 
+            rdk_inputs = inputs['rdk_inputs']
             if self.rdk_db_in != rdk_inputs:
                 self.set_signals(rdk_inputs)
                 self.rdk_db_in = copy.deepcopy(rdk_inputs)

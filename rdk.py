@@ -55,15 +55,16 @@ class RDK(threading.Thread):
             # Чтение выходов RoboDK из очереди
             rdk_outputs = self.outputs_queue.queue[0]['rdk_outputs']
 
+            # Set values to RDK
             for output_signal in rdk_outputs:
-                # self.logger.info(f'RDK input signals: {output_signal.name=} {rdk_outputs.get(output_signal.name)=}')
+                # self.logger.info(f'RDK input signals: {output_signal.name=}, {output_signal.value=}')
                 RDK.setParam(output_signal.name, int(output_signal.value))
                 # RDK.setParam('IO_1', 'True')
 
-            # Read values from RDK
+            # Get values from RDK
             rdk_inputs = self.inputs_queue.queue[0]['rdk_inputs']
             for input_signal in rdk_inputs:
-                # self.logger.info(f'RDK output signals: {rdk_inputs.get(input_signal.name)=}')
+                # self.logger.info(f'RDK output signals: {input_signal.name=}, {input_signal.value=}')
                 if input_signal.value_type == 'Bool':
                     input_signal.value = bool(RDK.getParam(input_signal.name))
                 else:

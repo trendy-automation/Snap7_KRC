@@ -1,19 +1,21 @@
-Snap7 is an open source, 32/64 bit, multi-platform Ethernet communication suite for interfacing natively with Siemens S7 PLCs.
+This program is intended for simulation and exchanging variables between PLC SIM, OfficeLite (or real KUKA robot) and RoboDK.
 
-Python wrapper for the snap7 PLC communication library - [GitHub](https://github.com/gijzelaerr/python-snap7).
+Main packages we used:
 
-Supported data types: String, Char, UInt, USint, Bool.
+[python-snap7](https://pypi.org/project/python-snap7/) - Python wrapper for the snap7 PLC communication library
 
-Используемые основные пакеты:
-python-snap7    # pip install python-snap7
-robodk 5.6.4    # pip install robodk
+[robodk 5.6.4](https://pypi.org/project/robodk/) - The robodk package implements the [RoboDK API for Python](https://robodk.com/doc/en/PythonAPI/index.html)
 
-### Инструкция
+[KRC-RPC](https://github.com/09th/KRC-RPC) - JSON-RPC for KUKA Cross3Krc COM server
 
-1. Создать DB для переменных, добавить переменные поддерживаемого типа для KUKA и RoboDK.
-2. В аттрибутах DB отлючить оптимизацию (Optimized block access).
-3. Заполнить config.yaml, в data_io прописать корректные сдвиги (offsets) как в DB. 
-4. Запустить RoboDK, PLC SIM и OfficeLite. В OfficeLite запустить KRC-RPC.
-5. Запустить main.py.
+Supported data types: String, Char, Real, UInt, USint, Bool.
 
-![Alt text](image.png)
+### Instruction
+
+1. Set up KRC-RPC in OfficeLite (or real KUKA robot).
+2. Create Data Block that will represent KUKA and RoboDK variables.
+3. Turn off "Optimized block access" in DB's attributes.
+4. Allow "Permit access with PUT/GET communication from remote partner" in PLC properties (Protection & Security).
+5. Fill *config.yaml* and *appsettings.json* in KRC-RPC (see "Example" folder)
+6. Run RoboDK, PLC SIM and OfficeLite. Run KRC-RPC.exe in OfficeLite.
+7. Run *main.py*.
