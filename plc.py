@@ -90,6 +90,8 @@ class PLC(threading.Thread):
         tag.value = None
         if tag.value_type == 'Bool':
             tag.value = self.get_bool(tag)
+        elif tag.value_type == "Real":
+            tag.value = self.get_real(tag)
         elif tag.value_type == "USInt":
             tag.value = self.get_usint(tag)
         elif "Int" in tag.value_type and tag.value_type in self.massa:
@@ -140,6 +142,8 @@ class PLC(threading.Thread):
         assert tag.value_type[0] != 'U' or tag.value >= 0, f"Запись отрицательного значения в тип {tag.value_type}"
         if tag.value_type == 'Bool':
             return self.set_bool(tag)
+        if tag.value_type == "Real":
+            return self.set_real(tag)
         if tag.value_type == "USInt":
             return self.set_usint(tag)
         if "Int" in tag.value_type and tag.value_type in self.massa:
@@ -208,14 +212,16 @@ class PLC(threading.Thread):
                                                rdk_outputs=copy.deepcopy(self.rdk_db_out))
 
             inputs = self.inputs_queue.queue[0]
-            kuka_inputs = inputs['kuka_inputs']
-            rdk_inputs = inputs['rdk_inputs']
+            # self.logger.info(f': {self.kuka_db_out=}')
+            # self.logger.info(f': {self.rdk_db_out=}')
 
             # Сравнение предыдущих значений с текущими (не тратим время на перезапись)
+            kuka_inputs = inputs['kuka_inputs']
             if self.kuka_db_in != kuka_inputs:
                 self.set_signals(kuka_inputs)
                 self.kuka_db_in = copy.deepcopy(kuka_inputs)
 
+            rdk_inputs = inputs['rdk_inputs']
             if self.rdk_db_in != rdk_inputs:
                 self.set_signals(rdk_inputs)
                 self.rdk_db_in = copy.deepcopy(rdk_inputs)
